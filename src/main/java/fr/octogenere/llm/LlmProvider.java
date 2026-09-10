@@ -1,4 +1,4 @@
-package fr.octoreview.llm;
+package fr.octogenere.llm;
 
 /** Contrat commun pour envoyer une demande textuelle à un modèle de langage. */
 public interface LlmProvider {

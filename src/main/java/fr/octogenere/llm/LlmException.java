@@ -1,4 +1,4 @@
-package fr.octoreview.llm;
+package fr.octogenere.llm;
 
 /** Erreur commune aux fournisseurs LLM, indépendante de leurs SDK. */
 public class LlmException extends RuntimeException {
