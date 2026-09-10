@@ -1,3 +1,5 @@
+package fr.octogenere.llm.google;
+
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;

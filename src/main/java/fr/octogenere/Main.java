@@ -1,11 +1,15 @@
 package fr.octogenere;
 
-import fr.octogenere.llm.LlmException;
-import fr.octogenere.llm.openai.OpenAiProvider;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
+
+import fr.octogenere.prompt.PromptBuilder;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
-import fr.octogenere.prompt.PromptBuilder;
-import fr.octogenere.prompt.xml.XmlFileTreeBuilder;
 
 /** Point d'entrée de la première démonstration en console. */
 public class Main {
@@ -15,8 +19,29 @@ public class Main {
             folderPath = String.join(" ", args);
         }
 
+        String apiKey = null;
+        String configFile = null;
         try {
-            String prompt = PromptBuilder.BuildReviewPrompt(folderPath);
+            // Java ne lit pas les fichiers .env automatiquement.
+            Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
+            apiKey = dotenv.get("OPENAI_API_KEY");
+            configFile = dotenv.get("CRITERIA_CFG");
+        }  catch (DotenvException error) {
+            System.err.println("Impossible de lire le fichier .env. Vérifie sa syntaxe.");
+            System.exit(1);
+        }
+
+        JsonObject criteria = null;
+        try (FileReader reader = new FileReader(configFile)) {
+            criteria = JsonParser.parseReader(reader).getAsJsonObject();
+        } catch (FileNotFoundException e) {
+            System.err.println(configFile + " not found");
+        } catch (IOException e) {
+            System.err.println(configFile + " cant be read");
+        }
+
+        try {
+            String prompt = PromptBuilder.BuildReviewPrompt(folderPath, criteria);
             System.out.println("Prompt generated : \n" + prompt);
         } catch (Exception e) {
             System.err.println("Fatal error. Unable to generate review prompt : " + e.getMessage());
@@ -25,8 +50,6 @@ public class Main {
 
         /*
         try {
-            // Java ne lit pas les fichiers .env automatiquement.
-            Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
             String apiKey = dotenv.get("OPENAI_API_KEY");
             String model = dotenv.get("OPENAI_MODEL", "gpt-4.1-mini");
 
@@ -40,9 +63,6 @@ public class Main {
                 String answer = provider.ask(prompt);
                 System.out.println(answer);
             }
-        } catch (DotenvException error) {
-            System.err.println("Impossible de lire le fichier .env. Vérifie sa syntaxe.");
-            System.exit(1);
         } catch (LlmException error) {
             System.err.println("Erreur : " + error.getMessage());
             System.exit(1);
