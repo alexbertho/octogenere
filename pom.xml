@@ -4,10 +4,10 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>fr.octoreview</groupId>
-    <artifactId>octoreview</artifactId>
+    <groupId>fr.octogenere</groupId>
+    <artifactId>octogenere</artifactId>
     <version>0.1.0-SNAPSHOT</version>
-    <name>OctoReview</name>
+    <name>OctoGenere</name>
 
     <properties>
         <maven.compiler.release>21</maven.compiler.release>
@@ -50,7 +50,7 @@
                 <artifactId>exec-maven-plugin</artifactId>
                 <version>3.5.0</version>
                 <configuration>
-                    <mainClass>fr.octoreview.Main</mainClass>
+                    <mainClass>fr.octogenere.Main</mainClass>
                 </configuration>
             </plugin>
         </plugins>
