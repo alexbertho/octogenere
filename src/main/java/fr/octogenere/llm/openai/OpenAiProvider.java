@@ -10,6 +10,7 @@ import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.ResponseOutputMessage;
 import com.openai.models.responses.ResponseStatus;
+
 import fr.octogenere.llm.LlmException;
 import fr.octogenere.llm.LlmProvider;
 

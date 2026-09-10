@@ -7,6 +7,11 @@ import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.sun.net.httpserver.HttpServer;
 import fr.octogenere.llm.LlmException;
 import fr.octogenere.llm.LlmProvider;
+
+import fr.octogenere.llm.LlmException;
+import fr.octogenere.llm.LlmProvider;
+import fr.octogenere.llm.openai.OpenAiProvider;
+
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
