@@ -1,5 +1,6 @@
 package fr.octoreview;
 
+import fr.octoreview.prompt.PromptBuilder;
 import fr.octoreview.prompt.xml.XmlFileTreeBuilder;
 
 /** Point d'entrée de la première démonstration en console. */
@@ -11,10 +12,11 @@ public class Main {
         }
 
         try {
-            String xmlTree = XmlFileTreeBuilder.BuildXmlFileTree(folderPath);
-            System.out.println(xmlTree);
+            String prompt = PromptBuilder.BuildReviewPrompt(folderPath);
+            System.out.println("Prompt generated : \n" + prompt);
         } catch (Exception e) {
-            System.err.println("runtime exception");
+            System.err.println("Fatal error. Unable to generate review prompt : " + e.getMessage());
+            e.printStackTrace();
         }
 
         /*
