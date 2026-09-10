@@ -47,6 +47,20 @@ Lancer les tests avec un serveur simulé local, sans clé API réelle ni appel �
 mvn test
 ```
 
+## Exécution isolée (sandbox) et défense contre l'injection de prompt
+
+Le paquet `fr.octogenere.security` fournit deux choses, utilisables indépendamment du reste de l'application :
+
+- `security.sandbox` : exécute une commande sur un projet analysé dans un conteneur Docker jetable, sans privilèges (utilisateur non-root, réseau coupé par défaut, filesystem en lecture seule sauf un tmpfs de travail, quotas CPU/mémoire/process, timeout). Point d'entrée : `SandboxService.createDefault().run(dossierProjet, commande)`.
+- `security.injection` : prépare le contenu d'un fichier avant de l'envoyer à un LLM (délimitation explicite + repérage heuristique de tentatives d'injection de prompt, ex. un commentaire demandant d'ignorer les instructions précédentes). Point d'entrée : `PromptInjectionGuard.createDefault().protect(nomFichier, contenu)`.
+
+Les tests unitaires (`mvn test`) ne nécessitent pas Docker : ils utilisent un `FakeSandboxExecutor`. Pour lancer aussi les tests d'intégration qui utilisent réellement Docker, construire d'abord l'image :
+
+```bash
+docker build -t octogenere/sandbox:1.0 -f docker/Dockerfile docker
+mvn -Dtest=fr.octogenere.security.sandbox.DockerSandboxExecutorIT test
+```
+
 ## Fonctionnalités prévues
 
 - Importer un projet depuis un dossier local ou une archive et afficher son arborescence.
