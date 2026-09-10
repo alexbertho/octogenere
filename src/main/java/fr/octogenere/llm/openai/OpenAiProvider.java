@@ -1,4 +1,4 @@
-package fr.octoreview.llm.openai;
+package fr.octogenere.llm.openai;
 
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
@@ -10,8 +10,8 @@ import com.openai.models.responses.ResponseCreateParams;
 import com.openai.models.responses.ResponseOutputItem;
 import com.openai.models.responses.ResponseOutputMessage;
 import com.openai.models.responses.ResponseStatus;
-import fr.octoreview.llm.LlmException;
-import fr.octoreview.llm.LlmProvider;
+import fr.octogenere.llm.LlmException;
+import fr.octogenere.llm.LlmProvider;
 
 import java.time.Duration;
 

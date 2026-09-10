@@ -1,7 +1,7 @@
-package fr.octoreview;
+package fr.octogenere;
 
-import fr.octoreview.llm.LlmException;
-import fr.octoreview.llm.openai.OpenAiProvider;
+import fr.octogenere.llm.LlmException;
+import fr.octogenere.llm.openai.OpenAiProvider;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
 

@@ -1,12 +1,12 @@
-package fr.octoreview.llm.openai;
+package fr.octogenere.llm.openai;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.openai.client.OpenAIClient;
 import com.openai.client.okhttp.OpenAIOkHttpClient;
 import com.sun.net.httpserver.HttpServer;
-import fr.octoreview.llm.LlmException;
-import fr.octoreview.llm.LlmProvider;
+import fr.octogenere.llm.LlmException;
+import fr.octogenere.llm.LlmProvider;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
