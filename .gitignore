@@ -1,0 +1,29 @@
+# Compilation Java
+*.class
+target/
+build/
+out/
+.gradle/
+
+# Fichiers locaux des IDE
+.idea/
+*.iml
+.vscode/
+.classpath
+.project
+.settings/
+
+# Configuration locale et secrets
+.env
+.env.*
+!.env.example
+
+# Journaux
+*.log
+
+# Brouillon local du rapport technique
+/draft.md
+
+# Fichiers du système
+.DS_Store
+Thumbs.db
