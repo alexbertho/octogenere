@@ -1,0 +1,126 @@
+% Document généré automatiquement par OctoGenere.
+% La structure est contrôlée par l'application ; les données variables sont échappées en Java.
+\documentclass[11pt,a4paper]{article}
+
+\usepackage[T1]{fontenc}
+\usepackage[french]{babel}
+\usepackage{lmodern}
+\usepackage{microtype}
+\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage{graphicx}
+\usepackage[table]{xcolor}
+\usepackage{array}
+\usepackage{booktabs}
+\usepackage{tabularx}
+\usepackage{enumitem}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{lastpage}
+\usepackage[hidelinks]{hyperref}
+
+\definecolor{UcaBlue}{HTML}{008DAD}
+\definecolor{UcaNavy}{HTML}{1D2A35}
+\definecolor{UcaLight}{HTML}{EAF6F9}
+\definecolor{UcaMuted}{HTML}{5D6973}
+\definecolor{UcaLine}{HTML}{C8DDE3}
+
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{0.55em}
+\setlist[itemize]{leftmargin=1.5em,itemsep=0.25em,topsep=0.25em}
+\renewcommand{\arraystretch}{1.25}
+
+\titleformat{\section}
+  {\Large\bfseries\sffamily\color{UcaNavy}}
+  {\color{UcaBlue}\thesection}{0.75em}{}
+  [\vspace{0.15em}{\color{UcaLine}\titlerule}]
+\titleformat{\subsection}
+  {\large\bfseries\sffamily\color{UcaNavy}}
+  {\thesubsection}{0.6em}{}
+
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\small OctoGenere}
+\fancyhead[R]{\sffamily\small @@PROJECT_NAME@@}
+\fancyfoot[L]{\sffamily\footnotesize Rapport d'évaluation logicielle}
+\fancyfoot[R]{\sffamily\footnotesize Page \thepage\ sur \pageref{LastPage}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+
+\newcommand{\scorebox}[2]{%
+  \begin{center}
+  \fcolorbox{UcaBlue}{UcaLight}{%
+    \parbox{0.9\textwidth}{%
+      \sffamily\textbf{#1}\hfill{\Large\bfseries\color{UcaBlue}#2}%
+    }%
+  }
+  \end{center}
+}
+
+\begin{document}
+
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+  \thispagestyle{empty}
+
+  \begin{flushright}
+    \IfFileExists{uca-logo.png}{%
+      \includegraphics[width=0.43\textwidth]{uca-logo.png}%
+    }{}
+  \end{flushright}
+
+  \vspace{2.2cm}
+  {\color{UcaBlue}\rule{\textwidth}{1.3pt}}
+  \vspace{0.6cm}
+
+  {\sffamily\Huge\bfseries\color{UcaNavy} Rapport d'évaluation\\[0.2em] logicielle}
+
+  \vspace{0.4cm}
+  {\sffamily\Large\color{UcaBlue} Généré par OctoGenere}
+
+  \vspace{1.4cm}
+  {\sffamily\LARGE\bfseries @@PROJECT_NAME@@}
+
+  \vfill
+
+  \renewcommand{\arraystretch}{1.5}
+  \begin{tabularx}{\textwidth}{@{}>{\sffamily\bfseries\color{UcaMuted}}p{3.8cm}X@{}}
+    Date de l'analyse & @@ANALYSIS_DATE@@ \\
+    Modèle utilisé & @@MODEL_NAME@@ \\
+    Configuration & @@CONFIGURATION@@ \\
+  \end{tabularx}
+
+  \vspace{0.7cm}
+  {\color{UcaBlue}\rule{\textwidth}{1.3pt}}
+\end{titlepage}
+\hypersetup{pageanchor=true}
+
+\tableofcontents
+\newpage
+
+\section{Synthèse générale}
+
+\begin{center}
+\fcolorbox{UcaLine}{UcaLight}{%
+  \parbox{0.9\textwidth}{@@OVERALL_SUMMARY@@}%
+}
+\end{center}
+
+\section{Vue d'ensemble des résultats}
+
+\rowcolors{2}{UcaLight}{white}
+\begin{tabularx}{\textwidth}{@{}>{\bfseries}X>{\centering\arraybackslash}p{1.7cm}>{\centering\arraybackslash}p{2cm}>{\centering\arraybackslash}p{1.8cm}@{}}
+  \toprule
+  \rowcolor{UcaBlue}
+  \color{white}\textbf{Critère} &
+  \color{white}\textbf{Score} &
+  \color{white}\textbf{Maximum} &
+  \color{white}\textbf{Réussite} \\
+  \midrule
+  @@SUMMARY_ROWS@@
+  \bottomrule
+\end{tabularx}
+
+\newpage
+@@CRITERION_SECTIONS@@
+
+\end{document}

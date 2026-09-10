@@ -26,4 +26,6 @@ out/
 
 # Fichiers du système
 .DS_Store
+__MACOSX/
+._*
 Thumbs.db
