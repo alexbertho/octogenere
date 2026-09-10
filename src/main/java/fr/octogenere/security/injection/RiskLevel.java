@@ -1,6 +1,6 @@
 package fr.octogenere.security.injection;
 
-/** Niveau de risque global d'un contenu, déduit des règles déclenchées. */
+/** Overall risk level of a piece of content, derived from the rules that fired. */
 public enum RiskLevel {
     NONE,
     LOW,

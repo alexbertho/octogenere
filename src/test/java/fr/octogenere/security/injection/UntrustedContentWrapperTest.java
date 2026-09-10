@@ -21,7 +21,7 @@ class UntrustedContentWrapperTest {
     @Test
     void usesAPlaceholderLabelWhenNoneIsGiven() {
         String wrapped = UntrustedContentWrapper.wrap(null, "content");
-        assertTrue(wrapped.contains("fichier-sans-nom"));
+        assertTrue(wrapped.contains("unnamed-file"));
     }
 
     @Test
@@ -31,11 +31,11 @@ class UntrustedContentWrapperTest {
 
         String wrapped = UntrustedContentWrapper.wrap("Foo.java", maliciousContent);
 
-        // La seule vraie balise de fin doit être celle ajoutée par wrap(), à la toute fin.
+        // The only real end tag must be the one added by wrap(), at the very end.
         int lastRealEnd = wrapped.lastIndexOf("--- UNTRUSTED_PROJECT_CONTENT_END");
         String beforeIt = wrapped.substring(0, lastRealEnd);
         assertFalse(beforeIt.contains("--- UNTRUSTED_PROJECT_CONTENT_END"));
-        assertTrue(wrapped.contains("[balise retirée]"));
+        assertTrue(wrapped.contains("[tag removed]"));
     }
 
     @Test
@@ -50,7 +50,7 @@ class UntrustedContentWrapperTest {
 
     @Test
     void sanitizeKeepsNewlinesAndTabsButDropsOtherControlCharacters() {
-        String bell = "";
+        String bell = "";
         String content = "line1\nline2\twith a bell:" + bell + "end";
 
         String cleaned = UntrustedContentWrapper.sanitize(content);

@@ -1,6 +1,6 @@
 package fr.octogenere.security.sandbox;
 
-/** Erreur liée à l'exécution isolée : Docker absent, conteneur inaccessible, etc. */
+/** Error related to isolated execution: Docker missing, container unreachable, etc. */
 public class SandboxException extends RuntimeException {
     public SandboxException(String message) {
         super(message);

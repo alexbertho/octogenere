@@ -2,6 +2,6 @@ package fr.octogenere.security.injection;
 
 import java.util.regex.Pattern;
 
-/** Une règle heuristique : un motif à rechercher et la gravité si il est trouvé. */
+/** A heuristic rule: a pattern to look for and the severity if it's found. */
 public record InjectionRule(String id, String description, Pattern pattern, RiskLevel severity) {
 }

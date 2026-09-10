@@ -3,10 +3,10 @@ package fr.octogenere.security.sandbox;
 import java.time.Duration;
 
 /**
- * Limites de ressources appliquées à une exécution en conteneur.
- * Les valeurs par défaut ({@link #defaults()}) correspondent à ce qui suffit pour
- * compiler / tester un petit projet Java (mvn compile, mvn test) sans laisser un
- * projet malveillant consommer toute la machine.
+ * Resource limits applied to a container execution.
+ * The default values ({@link #defaults()}) are enough to compile / test a
+ * small Java project (mvn compile, mvn test) without letting a malicious
+ * project consume the whole machine.
  */
 public record SandboxLimits(
         double cpus,
@@ -18,19 +18,19 @@ public record SandboxLimits(
 ) {
     public SandboxLimits {
         if (cpus <= 0) {
-            throw new IllegalArgumentException("cpus doit être strictement positif");
+            throw new IllegalArgumentException("cpus must be strictly positive");
         }
         if (memoryMb <= 0) {
-            throw new IllegalArgumentException("memoryMb doit être strictement positif");
+            throw new IllegalArgumentException("memoryMb must be strictly positive");
         }
         if (pidsLimit <= 0) {
-            throw new IllegalArgumentException("pidsLimit doit être strictement positif");
+            throw new IllegalArgumentException("pidsLimit must be strictly positive");
         }
         if (timeout == null || timeout.isNegative() || timeout.isZero()) {
-            throw new IllegalArgumentException("timeout doit être strictement positif");
+            throw new IllegalArgumentException("timeout must be strictly positive");
         }
         if (tmpfsSizeMb <= 0) {
-            throw new IllegalArgumentException("tmpfsSizeMb doit être strictement positif");
+            throw new IllegalArgumentException("tmpfsSizeMb must be strictly positive");
         }
     }
 

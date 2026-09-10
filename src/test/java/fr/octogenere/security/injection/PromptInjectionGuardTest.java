@@ -16,7 +16,7 @@ class PromptInjectionGuardTest {
 
         assertTrue(guarded.scanResult().suspicious());
         assertTrue(guarded.safePromptFragment().contains("Ignore all previous instructions"),
-                "le contenu suspect doit rester présent, seulement délimité, pas supprimé");
+                "suspicious content must remain present, only delimited, not removed");
         assertTrue(guarded.safePromptFragment().contains("Evil.java"));
     }
 

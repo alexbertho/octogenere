@@ -4,9 +4,8 @@ import java.io.IOException;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Vérifie si le CLI Docker et le démon associé répondent, pour permettre aux
- * tests d'intégration de se désactiver proprement (au lieu d'échouer) sur une
- * machine sans Docker.
+ * Checks whether the Docker CLI and its daemon respond, so integration tests
+ * can cleanly disable themselves (skip, not fail) on a machine without Docker.
  */
 public final class DockerAvailability {
     private static Boolean cached;

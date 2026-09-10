@@ -2,7 +2,7 @@ package fr.octogenere.security.injection;
 
 import java.util.List;
 
-/** Résultat de l'analyse d'un contenu à la recherche de tentatives d'injection de prompt. */
+/** Result of scanning a piece of content for prompt injection attempts. */
 public record ScanResult(RiskLevel riskLevel, List<Finding> findings) {
     public ScanResult {
         findings = List.copyOf(findings);
@@ -16,7 +16,7 @@ public record ScanResult(RiskLevel riskLevel, List<Finding> findings) {
         return new ScanResult(RiskLevel.NONE, List.of());
     }
 
-    /** Une occurrence précise d'une règle déclenchée dans le contenu analysé. */
+    /** One specific occurrence of a rule that fired in the scanned content. */
     public record Finding(String ruleId, String description, int offset, String matchedSnippet) {
     }
 }

@@ -47,19 +47,46 @@ Lancer les tests avec un serveur simulé local, sans clé API réelle ni appel �
 mvn test
 ```
 
-## Exécution isolée (sandbox) et défense contre l'injection de prompt
+## Security module: sandboxed execution & prompt-injection defense
 
-Le paquet `fr.octogenere.security` fournit deux choses, utilisables indépendamment du reste de l'application :
+`fr.octogenere.security` provides two independent things, usable by any other module:
 
-- `security.sandbox` : exécute une commande sur un projet analysé dans un conteneur Docker jetable, sans privilèges (utilisateur non-root, réseau coupé par défaut, filesystem en lecture seule sauf un tmpfs de travail, quotas CPU/mémoire/process, timeout). Point d'entrée : `SandboxService.createDefault().run(dossierProjet, commande)`.
-- `security.injection` : prépare le contenu d'un fichier avant de l'envoyer à un LLM (délimitation explicite + repérage heuristique de tentatives d'injection de prompt, ex. un commentaire demandant d'ignorer les instructions précédentes). Point d'entrée : `PromptInjectionGuard.createDefault().protect(nomFichier, contenu)`.
+- **`security.sandbox`** — runs a command on an analyzed project inside a disposable, unprivileged Docker container (non-root user, network disabled by default, read-only filesystem except a writable scratch tmpfs, CPU/memory/process/time limits, forced cleanup even on timeout). Entry point: `SandboxService.createDefault().run(projectDir, command)`.
+- **`security.injection`** — prepares a file's content before it's sent to an LLM: wraps it in explicit delimiters and heuristically flags prompt-injection attempts (e.g. a comment asking the model to ignore its previous instructions), without dropping the content. Entry point: `PromptInjectionGuard.createDefault().protect(fileName, content)`.
 
-Les tests unitaires (`mvn test`) ne nécessitent pas Docker : ils utilisent un `FakeSandboxExecutor`. Pour lancer aussi les tests d'intégration qui utilisent réellement Docker, construire d'abord l'image :
+### Prerequisites
 
-```bash
-docker build -t octogenere/sandbox:1.0 -f docker/Dockerfile docker
-mvn -Dtest=fr.octogenere.security.sandbox.DockerSandboxExecutorIT test
-```
+- JDK 21 and Maven (same as the rest of the project).
+- [Docker](https://www.docker.com/) installed and running — only needed to actually execute code in the sandbox or run its integration tests. Everything else (including `mvn test`) works without it.
+
+### Getting it running
+
+1. Build the sandbox image once (rebuild it any time `docker/Dockerfile` or `docker/entrypoint.sh` changes):
+
+   ```bash
+   docker build -t octogenere/sandbox:1.0 -f docker/Dockerfile docker
+   ```
+
+2. Use it from Java:
+
+   ```java
+   SandboxService sandbox = SandboxService.createDefault();
+   SandboxResult result = sandbox.run(projectDir, List.of("mvn", "-q", "-DskipTests", "compile"));
+   // result.exitCode(), result.stdout(), result.stderr(), result.timedOut()
+
+   PromptInjectionGuard guard = PromptInjectionGuard.createDefault();
+   PromptInjectionGuard.GuardedContent guarded = guard.protect("Foo.java", fileContent);
+   String safeToSendToTheLlm = guarded.safePromptFragment();
+   ```
+
+### Running the tests
+
+- `mvn test` runs everything except Docker-dependent tests (they're named `*IT.java`, so Surefire skips them by default) — this includes all of `security.sandbox` and `security.injection`, using a `FakeSandboxExecutor` instead of real Docker.
+- To also run the real Docker integration tests (build the image first, see above):
+
+  ```bash
+  mvn -Dtest=fr.octogenere.security.sandbox.DockerSandboxExecutorIT test
+  ```
 
 ## Fonctionnalités prévues
 

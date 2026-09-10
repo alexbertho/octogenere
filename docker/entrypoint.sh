@@ -1,16 +1,16 @@
 #!/bin/sh
-# Point d'entrée du conteneur sandbox. Tourne en tant qu'utilisateur non-root "sandbox".
-# /input est le montage en lecture seule du dossier du projet analysé : on ne peut
-# donc pas y écrire, même par erreur. On copie son contenu dans /workspace (un tmpfs
-# monté au démarrage du conteneur, cf. DockerCommandBuilder) avant d'exécuter la
-# commande demandée, qui elle a le droit d'écrire (fichiers .class, target/, etc.).
+# Entrypoint of the sandbox container. Runs as the non-root "sandbox" user.
+# /input is the read-only mount of the analyzed project's directory: it can't be
+# written to, even by mistake. Its content is copied into /workspace (a tmpfs
+# mounted when the container starts, see DockerCommandBuilder) before running
+# the requested command, which is allowed to write there (.class files, target/, etc.).
 set -eu
 
-# HOME par défaut (/home/sandbox) est sur le rootfs en lecture seule : des outils comme Maven
-# (~/.m2/repository) ont besoin d'un HOME inscriptible, donc on le fait pointer vers le tmpfs.
+# The default HOME (/home/sandbox) is on the read-only rootfs: tools like Maven
+# (~/.m2/repository) need a writable HOME, so we point it at the tmpfs instead.
 export HOME=/workspace
 
 cp -r /input/. /workspace/ 2>/dev/null || true
 cd /workspace
 
-exec timeout --signal=KILL "${SANDBOX_TIMEOUT_SECONDS:?SANDBOX_TIMEOUT_SECONDS non défini}" "$@"
+exec timeout --signal=KILL "${SANDBOX_TIMEOUT_SECONDS:?SANDBOX_TIMEOUT_SECONDS is not set}" "$@"

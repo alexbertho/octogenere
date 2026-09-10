@@ -14,15 +14,16 @@ import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Adapte le CLI {@code docker} au contrat {@link SandboxExecutor} (pattern Adapter,
- * comme {@code OpenAiProvider} adapte le SDK OpenAI à {@code LlmProvider}).
+ * Adapts the {@code docker} CLI to the {@link SandboxExecutor} contract
+ * (Adapter pattern, same idea as {@code OpenAiProvider} adapting the OpenAI
+ * SDK to {@code LlmProvider}).
  * <p>
- * Chaque appel à {@link #execute(ExecutionRequest)} correspond à un conteneur
- * jetable : nommé, lancé, attendu (avec timeout côté Java en plus du timeout
- * interne au conteneur), puis supprimé explicitement dans un bloc finally.
- * {@code --rm} seul ne suffit pas : si le process client {@code docker run} est
- * tué de force après un dépassement de délai, le conteneur peut continuer de
- * tourner côté démon sans que {@code --rm} n'ait eu l'occasion de s'appliquer.
+ * Each call to {@link #execute(ExecutionRequest)} corresponds to a disposable
+ * container: named, started, waited on (with a Java-side timeout on top of
+ * the container's own internal timeout), then explicitly removed in a finally
+ * block. {@code --rm} alone is not enough: if the client-side {@code docker
+ * run} process is force-killed after a timeout, the container can keep
+ * running server-side without {@code --rm} ever getting the chance to apply.
  */
 public final class DockerSandboxExecutor implements SandboxExecutor {
 
@@ -39,7 +40,7 @@ public final class DockerSandboxExecutor implements SandboxExecutor {
         this(image, DockerSandboxExecutor::launchRealProcess);
     }
 
-    // Constructeur package-privé : permet aux tests d'injecter un lanceur de process simulé.
+    // Package-private constructor: lets tests inject a fake process launcher.
     DockerSandboxExecutor(String image, ProcessLauncher processLauncher) {
         this.image = image;
         this.processLauncher = processLauncher;
@@ -63,16 +64,16 @@ public final class DockerSandboxExecutor implements SandboxExecutor {
         try {
             process = processLauncher.launch(runArgs);
         } catch (IOException e) {
-            throw new SandboxException("Impossible de lancer Docker. Vérifie qu'il est installé et démarré, "
-                    + "et que l'image " + image + " a bien été construite (docker build).", e);
+            throw new SandboxException("Could not launch Docker. Check that it is installed and running, "
+                    + "and that the image " + image + " has been built (docker build).", e);
         }
 
         ExecutorService streamReaders = Executors.newFixedThreadPool(2);
         Future<String> stdoutFuture = streamReaders.submit(() -> readFully(process.getInputStream()));
         Future<String> stderrFuture = streamReaders.submit(() -> readFully(process.getErrorStream()));
 
-        // Marge par rapport au timeout interne au conteneur : celui-ci doit normalement déclencher en premier
-        // et produire une sortie propre ; ce timeout côté Java n'est qu'un filet de sécurité.
+        // Margin on top of the container's internal timeout: that one should normally fire
+        // first and produce clean output; this Java-side timeout is just a safety net.
         Duration javaSideTimeout = timeout.plusSeconds(10);
         boolean timedOut;
         try {
@@ -83,7 +84,7 @@ public final class DockerSandboxExecutor implements SandboxExecutor {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
             process.destroyForcibly();
-            throw new SandboxException("Attente de l'exécution interrompue.", e);
+            throw new SandboxException("Interrupted while waiting for the execution to finish.", e);
         }
 
         String stdout = collect(stdoutFuture);
@@ -91,12 +92,12 @@ public final class DockerSandboxExecutor implements SandboxExecutor {
         streamReaders.shutdownNow();
 
         int exitCode = timedOut ? -1 : process.exitValue();
-        // Le timeout interne au conteneur (coreutils `timeout --signal=KILL`, dans l'entrypoint)
-        // est censé déclencher avant celui côté Java dans le cas normal ; il se traduit par le
-        // code de sortie 137 (tué par SIGKILL), pas par un dépassement du délai d'attente
-        // ci-dessus. Limite connue : le code 137 est aussi celui d'un process tué par
-        // l'OOM-killer du noyau (--memory dépassé) - on ne distingue pas les deux cas, les deux
-        // indiquent de toute façon "la commande n'a pas pu aller à son terme normalement".
+        // The container-internal timeout (coreutils `timeout --signal=KILL`, in the entrypoint)
+        // is expected to fire before the Java-side one in the normal case; it shows up as exit
+        // code 137 (killed by SIGKILL), not as the wait above actually timing out. Known
+        // limitation: 137 is also what a process killed by the kernel OOM-killer (--memory
+        // exceeded) exits with - we don't distinguish the two cases, both mean the command
+        // couldn't run to completion anyway.
         if (!timedOut && exitCode == 137) {
             timedOut = true;
         }
@@ -111,7 +112,7 @@ public final class DockerSandboxExecutor implements SandboxExecutor {
             if (e instanceof InterruptedException) {
                 Thread.currentThread().interrupt();
             }
-            // Nettoyage best-effort : un échec ici ne doit pas masquer le résultat de l'exécution.
+            // Best-effort cleanup: a failure here must not hide the execution result.
         }
     }
 
@@ -128,7 +129,8 @@ public final class DockerSandboxExecutor implements SandboxExecutor {
         try {
             input.transferTo(buffer);
         } catch (IOException e) {
-            // Le flux peut se fermer brutalement si le conteneur est tué (destroyForcibly) ; on garde ce qu'on a lu.
+            // The stream can close abruptly if the container is killed (destroyForcibly);
+            // keep whatever was read so far.
         }
         return buffer.toString(StandardCharsets.UTF_8);
     }

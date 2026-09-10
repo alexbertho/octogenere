@@ -6,10 +6,10 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
- * Double de test pour {@link SandboxExecutor}, réutilisable par les autres
- * modules (ex: le futur moteur d'analyse) pour tester leur code sans jamais
- * lancer Docker. Par défaut, une requête non configurée échoue plutôt que de
- * renvoyer un résultat silencieusement incorrect.
+ * Test double for {@link SandboxExecutor}, reusable by other modules (e.g.
+ * the future analysis engine) to test their code without ever launching
+ * Docker. By default, an unstubbed request fails instead of silently
+ * returning an incorrect result.
  */
 public final class FakeSandboxExecutor implements SandboxExecutor {
 
@@ -41,11 +41,11 @@ public final class FakeSandboxExecutor implements SandboxExecutor {
         if (defaultResult != null) {
             return defaultResult;
         }
-        throw new SandboxException("Aucun résultat configuré dans FakeSandboxExecutor pour cette requête : "
+        throw new SandboxException("No result configured in FakeSandboxExecutor for this request: "
                 + request.command());
     }
 
-    /** Résultat pratique pour les tests qui n'ont pas besoin de simuler un échec. */
+    /** Convenience result for tests that don't need to simulate a failure. */
     public static SandboxResult success(String stdout) {
         return new SandboxResult(0, stdout, "", false, Duration.ZERO);
     }

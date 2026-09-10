@@ -2,7 +2,7 @@ package fr.octogenere.security.sandbox;
 
 import java.time.Duration;
 
-/** Résultat d'une exécution en conteneur : sortie standard/erreur séparées, code de retour, durée. */
+/** Result of a container execution: separate stdout/stderr, exit code, duration. */
 public record SandboxResult(
         int exitCode,
         String stdout,

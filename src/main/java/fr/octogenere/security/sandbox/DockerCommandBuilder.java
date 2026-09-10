@@ -5,14 +5,14 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Construit les arguments de la commande {@code docker run} appliquant le
- * principe de moindre privilège. Fonction pure (aucun appel système) afin de
- * pouvoir vérifier chaque option sans avoir Docker installé.
+ * Builds the {@code docker run} arguments enforcing the principle of least
+ * privilege. Pure function (no system call), so every option can be checked
+ * without Docker installed.
  * <p>
- * On construit toujours une liste d'arguments, jamais une chaîne à passer à un
- * shell : la commande demandée par l'appelant ({@link ExecutionRequest#command()})
- * est transmise telle quelle en fin de liste, sans jamais être interprétée par
- * un shell côté hôte.
+ * Arguments are always built as a list, never as a string passed to a shell:
+ * the command requested by the caller ({@link ExecutionRequest#command()}) is
+ * passed through as-is at the end of the list, never interpreted by a shell
+ * on the host side.
  */
 final class DockerCommandBuilder {
 
@@ -46,8 +46,8 @@ final class DockerCommandBuilder {
         args.add(String.valueOf(limits.cpus()));
         args.add("--tmpfs");
         args.add("/workspace:rw,exec,size=" + limits.tmpfsSizeMb() + "m,uid=10001,gid=10001,mode=0700");
-        // /tmp en écriture : des outils comme Maven (jansi) ou des JVM lancées dans le conteneur
-        // s'attendent à pouvoir y écrire un fichier de verrou, même sans rapport avec /workspace.
+        // Writable /tmp: tools like Maven (jansi) or JVMs started inside the container expect
+        // to be able to write a lock file there, unrelated to /workspace.
         args.add("--tmpfs");
         args.add("/tmp:rw,exec,size=64m,uid=10001,gid=10001,mode=1777");
         args.add("-v");

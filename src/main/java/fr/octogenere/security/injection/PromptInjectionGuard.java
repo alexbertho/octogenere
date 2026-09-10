@@ -1,20 +1,20 @@
 package fr.octogenere.security.injection;
 
 /**
- * Point d'entrée unique pour rendre un contenu de projet sûr à insérer dans un
- * prompt (pattern Facade) : scan + délimitation en un seul appel. Le contenu
- * suspect n'est pas bloqué ici - il est quand même délimité et renvoyé, à
- * charge pour l'appelant (construction du prompt, génération du rapport) de
- * décider quoi faire de {@link ScanResult#suspicious()} (log, mention dans le
- * rapport, etc.). Bloquer un fichier entier sur une simple heuristique
- * risquerait trop de faux positifs.
+ * Single entry point to make a piece of project content safe to insert into a
+ * prompt (Facade pattern): scan + delimiting in one call. Suspicious content
+ * is not blocked here - it is still delimited and returned, leaving it up to
+ * the caller (prompt building, report generation) to decide what to do with
+ * {@link ScanResult#suspicious()} (log it, mention it in the report, etc.).
+ * Blocking a whole file on a simple heuristic alone would risk too many false
+ * positives.
  */
 public final class PromptInjectionGuard {
     private final PromptInjectionScanner scanner;
 
     public PromptInjectionGuard(PromptInjectionScanner scanner) {
         if (scanner == null) {
-            throw new IllegalArgumentException("scanner ne peut pas être nul");
+            throw new IllegalArgumentException("scanner cannot be null");
         }
         this.scanner = scanner;
     }

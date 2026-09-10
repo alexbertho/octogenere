@@ -1,10 +1,10 @@
 package fr.octogenere.security.sandbox;
 
 /**
- * Exécute une commande dans un environnement isolé (pattern Strategy).
- * {@link DockerSandboxExecutor} est l'implémentation réelle ; les tests des
- * autres modules peuvent fournir leur propre implémentation (voir
- * {@code FakeSandboxExecutor} dans les tests de ce paquet) sans jamais lancer Docker.
+ * Runs a command in an isolated environment (Strategy pattern).
+ * {@link DockerSandboxExecutor} is the real implementation; tests for other
+ * modules can provide their own implementation (see {@code FakeSandboxExecutor}
+ * in this package's tests) without ever launching Docker.
  */
 public interface SandboxExecutor {
     SandboxResult execute(ExecutionRequest request);

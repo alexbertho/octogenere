@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Décrit une commande à exécuter dans un environnement isolé : le dossier du
- * projet à monter (en lecture seule), la commande elle-même, et les limites à
- * appliquer. Immuable, construit via {@link #builder(Path, List)}.
+ * Describes a command to run in an isolated environment: the project
+ * directory to mount (read-only), the command itself, and the limits to
+ * apply. Immutable, built via {@link #builder(Path, List)}.
  */
 public final class ExecutionRequest {
     private final Path projectDirectory;
@@ -53,13 +53,13 @@ public final class ExecutionRequest {
 
         private Builder(Path projectDirectory, List<String> command) {
             if (projectDirectory == null) {
-                throw new IllegalArgumentException("projectDirectory ne peut pas être nul");
+                throw new IllegalArgumentException("projectDirectory cannot be null");
             }
             if (!Files.isDirectory(projectDirectory)) {
-                throw new IllegalArgumentException("projectDirectory doit être un dossier existant : " + projectDirectory);
+                throw new IllegalArgumentException("projectDirectory must be an existing directory: " + projectDirectory);
             }
             if (command == null || command.isEmpty()) {
-                throw new IllegalArgumentException("command ne peut pas être vide");
+                throw new IllegalArgumentException("command cannot be empty");
             }
             this.projectDirectory = projectDirectory;
             this.command = new ArrayList<>(command);
@@ -67,7 +67,7 @@ public final class ExecutionRequest {
 
         public Builder limits(SandboxLimits limits) {
             if (limits == null) {
-                throw new IllegalArgumentException("limits ne peut pas être nul");
+                throw new IllegalArgumentException("limits cannot be null");
             }
             this.limits = limits;
             return this;
@@ -80,7 +80,7 @@ public final class ExecutionRequest {
 
         public Builder env(String key, String value) {
             if (key == null || key.isBlank()) {
-                throw new IllegalArgumentException("le nom de la variable d'environnement ne peut pas être vide");
+                throw new IllegalArgumentException("environment variable name cannot be blank");
             }
             this.environment.put(key, value);
             return this;

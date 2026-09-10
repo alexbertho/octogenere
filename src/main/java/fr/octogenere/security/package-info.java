@@ -1,6 +1,6 @@
 /**
- * Gestion des données non fiables : exécution isolée du code d'un projet analysé
- * (sous-paquet {@code sandbox}) et défense contre l'injection de prompt dans le
- * contenu envoyé au LLM (sous-paquet {@code injection}).
+ * Handling of untrusted input: isolated execution of an analyzed project's
+ * code (sub-package {@code sandbox}) and defense against prompt injection in
+ * content sent to the LLM (sub-package {@code injection}).
  */
 package fr.octogenere.security;

@@ -1,12 +1,11 @@
 package fr.octogenere.security.injection;
 
 /**
- * Recherche des tentatives d'injection de prompt dans un contenu (pattern
- * Strategy) : ex. un commentaire de code demandant au modèle d'ignorer ses
- * instructions précédentes. {@link HeuristicPromptInjectionScanner} est
- * l'implémentation actuelle ; d'autres approches (basées sur un LLM, ou sur
- * une liste de règles externalisée) pourront être ajoutées sans toucher aux
- * appelants.
+ * Looks for prompt injection attempts in a piece of content (Strategy
+ * pattern): e.g. a code comment asking the model to ignore its previous
+ * instructions. {@link HeuristicPromptInjectionScanner} is the current
+ * implementation; other approaches (LLM-based, or driven by an externalized
+ * rule list) could be added later without touching the callers.
  */
 public interface PromptInjectionScanner {
     ScanResult scan(String content);

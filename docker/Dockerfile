@@ -1,20 +1,20 @@
-# Image utilisée pour exécuter le code d'un projet analysé de façon isolée.
-# Voir fr.octogenere.security.sandbox.DockerSandboxExecutor / DockerCommandBuilder
-# pour les options docker run appliquées en plus de ce qui est défini ici
-# (utilisateur non-root, réseau désactivé, lecture seule, quotas de ressources...).
+# Image used to execute an analyzed project's code in isolation.
+# See fr.octogenere.security.sandbox.DockerSandboxExecutor / DockerCommandBuilder
+# for the docker run options applied on top of what's defined here
+# (non-root user, network disabled, read-only, resource limits...).
 #
-# Construction :
-#   docker build -t octogenere/sandbox:1.0 -f docker/Dockerfile .
+# Build:
+#   docker build -t octogenere/sandbox:1.0 -f docker/Dockerfile docker
 
 FROM eclipse-temurin:21-jdk-alpine
 
-# maven : pour compiler/tester des projets Maven (le cas d'usage principal attendu).
-# coreutils : busybox ne fournit pas `timeout --signal=KILL`, dont on a besoin dans l'entrypoint.
+# maven: to compile/test Maven projects (the main expected use case).
+# coreutils: busybox doesn't provide `timeout --signal=KILL`, which the entrypoint needs.
 RUN apk add --no-cache maven coreutils
 
 RUN addgroup -g 10001 sandbox \
-    # -h /workspace : certains outils (dont la JVM elle-même pour user.home) lisent le home
-    # directement dans /etc/passwd plutôt que la variable d'environnement HOME.
+    # -h /workspace: some tools (including the JVM itself for user.home) read the home
+    # directory straight from /etc/passwd rather than the HOME environment variable.
     && adduser -D -u 10001 -h /workspace -G sandbox sandbox \
     && mkdir -p /input /workspace \
     && chown -R sandbox:sandbox /workspace

@@ -20,10 +20,10 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
- * Vérifie le comportement de DockerSandboxExecutor sans jamais lancer Docker,
- * grâce au seam ProcessLauncher. Le point le plus important testé ici : le
- * nettoyage ("docker rm -f") doit avoir lieu dans tous les cas (succès, timeout,
- * échec de lancement), pas seulement quand tout se passe bien.
+ * Verifies the behavior of DockerSandboxExecutor without ever launching
+ * Docker, thanks to the ProcessLauncher seam. The most important thing
+ * tested here: cleanup ("docker rm -f") must happen in every case (success,
+ * timeout, launch failure), not just when everything goes well.
  */
 class DockerSandboxExecutorTest {
 
@@ -47,7 +47,7 @@ class DockerSandboxExecutorTest {
         assertFalse(result.timedOut());
         assertTrue(result.succeeded());
         assertTrue(invocations.stream().anyMatch(argv -> argv.contains("rm")),
-                "le nettoyage docker rm -f doit avoir lieu même quand tout se passe bien");
+                "docker rm -f cleanup must happen even when everything goes fine");
     }
 
     @Test
@@ -71,14 +71,14 @@ class DockerSandboxExecutorTest {
         assertTrue(result.timedOut());
         assertTrue(hangingProcess.wasDestroyedForcibly());
         assertTrue(invocations.stream().anyMatch(argv -> argv.contains("rm")),
-                "le nettoyage doit aussi avoir lieu après un timeout");
+                "cleanup must also happen after a timeout");
     }
 
     @Test
     void detectsTheContainerInternalTimeoutEvenWhenTheJavaSideWaitCompletesNormally(@TempDir Path projectDir) {
-        // Cas le plus courant en pratique : le `timeout --signal=KILL` de l'entrypoint déclenche
-        // avant le timeout côté Java, docker run se termine donc "normalement" (du point de vue
-        // de Process.waitFor) mais avec le code de sortie 137 propre à coreutils en mode KILL.
+        // Most common case in practice: the entrypoint's `timeout --signal=KILL` fires before
+        // the Java-side timeout, so docker run finishes "normally" (from Process.waitFor's point
+        // of view) but with the exit code 137 that coreutils produces in KILL mode.
         DockerSandboxExecutor.ProcessLauncher launcher = argv ->
                 argv.contains("rm") ? new FakeProcess(0, "", "", false) : new FakeProcess(137, "", "", false);
         DockerSandboxExecutor executor = new DockerSandboxExecutor(DockerSandboxExecutor.DEFAULT_IMAGE, launcher);
@@ -98,17 +98,17 @@ class DockerSandboxExecutorTest {
             if (argv.contains("rm")) {
                 return new FakeProcess(0, "", "", false);
             }
-            throw new IOException("docker introuvable");
+            throw new IOException("docker not found");
         };
         DockerSandboxExecutor executor = new DockerSandboxExecutor(DockerSandboxExecutor.DEFAULT_IMAGE, launcher);
         ExecutionRequest request = ExecutionRequest.builder(projectDir, List.of("echo", "hi")).build();
 
         assertThrows(SandboxException.class, () -> executor.execute(request));
         assertTrue(invocations.stream().anyMatch(argv -> argv.contains("rm")),
-                "même si docker run échoue à démarrer, le nettoyage doit être tenté");
+                "cleanup must be attempted even if docker run fails to start");
     }
 
-    /** Simule un java.lang.Process sans jamais lancer de vrai process. */
+    /** Simulates a java.lang.Process without ever launching a real one. */
     private static final class FakeProcess extends Process {
         private final int exitCode;
         private final ByteArrayInputStream stdout;
