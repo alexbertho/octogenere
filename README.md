@@ -1,4 +1,4 @@
-# OctoReview
+# OctoGenere
 
 Projet de M1 dans le cadre de l'UE Software Engineering & Design pattern, réalisé en groupe de 8.
 
