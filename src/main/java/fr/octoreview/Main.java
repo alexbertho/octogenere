@@ -1,13 +1,23 @@
 package fr.octoreview;
 
-import fr.octoreview.llm.LlmException;
-import fr.octoreview.llm.openai.OpenAiProvider;
-import io.github.cdimascio.dotenv.Dotenv;
-import io.github.cdimascio.dotenv.DotenvException;
+import fr.octoreview.prompt.xml.XmlFileTreeBuilder;
 
 /** Point d'entrée de la première démonstration en console. */
 public class Main {
     public static void main(String[] args) {
+        String folderPath = ".";
+        if (args.length > 0) {
+            folderPath = String.join(" ", args);
+        }
+
+        try {
+            String xmlTree = XmlFileTreeBuilder.BuildXmlFileTree(folderPath);
+            System.out.println(xmlTree);
+        } catch (Exception e) {
+            System.err.println("runtime exception");
+        }
+
+        /*
         try {
             // Java ne lit pas les fichiers .env automatiquement.
             Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
@@ -31,5 +41,7 @@ public class Main {
             System.err.println("Erreur : " + error.getMessage());
             System.exit(1);
         }
+        */
+
     }
 }
