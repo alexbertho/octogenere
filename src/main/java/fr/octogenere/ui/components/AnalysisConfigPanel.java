@@ -10,7 +10,9 @@ import fr.octogenere.analysis.config.CriterionCatalog;
 import fr.octogenere.analysis.config.EvaluationCriterion;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Panneau central permettant à l'utilisateur de configurer les paramètres de l'analyse.
@@ -25,6 +27,7 @@ public class AnalysisConfigPanel extends VBox {
     private Label statusLabel;
     private Button startBtn;
     private ComboBox<String> modelSelector;
+    private boolean updatingModels;
 
     /**
      * Constructeur du panneau de configuration.
@@ -65,14 +68,16 @@ public class AnalysisConfigPanel extends VBox {
         modelLabel.getStyleClass().add("title");
 
         modelSelector = new ComboBox<>();
+        modelSelector.setId("model-selector");
         modelSelector.getStyleClass().add("combo-box");
-        // TODO:  Ajouter ici les modèles
-        modelSelector.getItems().addAll("gpt-4o-mini", "gpt-4o", "claude-3-5-sonnet");
-        modelSelector.getSelectionModel().selectFirst();
-        modelSelector.getStyleClass().add("combo-box");
+        modelSelector.setPromptText("Chargement des modèles...");
 
         // Prévenir le contrôleur si on change de modèle
-        modelSelector.setOnAction(e -> controller.onConfigurationChanged());
+        modelSelector.setOnAction(e -> {
+            if (!updatingModels) {
+                controller.onConfigurationChanged();
+            }
+        });
         modelContainer.getChildren().addAll(modelLabel, modelSelector);
 
         // Assemblage horizontal
@@ -130,7 +135,40 @@ public class AnalysisConfigPanel extends VBox {
         }
 
         // Déléguer l'action au contrôleur
-        controller.onStartAnalysis(selectedCriteria);
+        controller.onStartAnalysis(selectedCriteria, modelSelector.getValue());
+    }
+
+    /**
+     * Remplit le sélecteur avec les modèles découverts. Le modèle configuré est
+     * conservé comme choix initial et sert de repli si la liste est vide.
+     */
+    public void setAvailableModels(List<String> models, String configuredModel) {
+        LinkedHashSet<String> options = new LinkedHashSet<>();
+        if (models != null) {
+            models.stream()
+                    .filter(Objects::nonNull)
+                    .map(String::trim)
+                    .filter(model -> !model.isBlank())
+                    .forEach(options::add);
+        }
+        if (options.isEmpty() && configuredModel != null && !configuredModel.isBlank()) {
+            options.add(configuredModel.trim());
+        }
+
+        String previousSelection = modelSelector.getValue();
+        updatingModels = true;
+        try {
+            modelSelector.getItems().setAll(options);
+            if (previousSelection != null && options.contains(previousSelection)) {
+                modelSelector.getSelectionModel().select(previousSelection);
+            } else if (configuredModel != null && options.contains(configuredModel.trim())) {
+                modelSelector.getSelectionModel().select(configuredModel.trim());
+            } else {
+                modelSelector.getSelectionModel().selectFirst();
+            }
+        } finally {
+            updatingModels = false;
+        }
     }
 
     /**

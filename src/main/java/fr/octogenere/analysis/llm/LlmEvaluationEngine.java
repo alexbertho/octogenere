@@ -16,6 +16,9 @@ import fr.octogenere.llm.LlmProvider;
 import fr.octogenere.prompt.PromptBuilder;
 import fr.octogenere.prompt.xml.ProjectContext;
 import fr.octogenere.prompt.xml.XmlFileTreeBuilder;
+import fr.octogenere.security.sandbox.SandboxException;
+import fr.octogenere.security.sandbox.SandboxResult;
+import fr.octogenere.security.sandbox.SandboxService;
 
 /**
  * Pipeline d'analyse réelle : projet, prompt, provider, validation puis rapport
@@ -46,10 +49,17 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
     @Override
     public EvaluationReport analyze(Path projectDirectory, List<String> criteria,
             AnalysisObserver observer) throws IOException {
+        return analyze(projectDirectory, criteria, provider.modelName(), observer);
+    }
+
+    @Override
+    public EvaluationReport analyze(Path projectDirectory, List<String> criteria,
+            String model, AnalysisObserver observer) throws IOException {
         if (projectDirectory == null || !Files.isDirectory(projectDirectory)) {
             throw new IllegalArgumentException("Sélectionne un dossier de projet existant.");
         }
         Objects.requireNonNull(observer, "L'observateur doit être présent.");
+        String selectedModel = requireModel(model);
         List<EvaluationCriterion> selectedCriteria = criterionCatalog.resolveLabels(criteria);
         Path project = projectDirectory.toAbsolutePath().normalize();
         String projectName = project.getFileName() == null ? project.toString() : project.getFileName().toString();
@@ -70,22 +80,29 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
         }
 
         checkInterrupted();
-        //String prompt = promptBuilder.buildReviewPrompt(projectName, selectedCriteria, context);
-        checkInterrupted();
-        
-        observer.onProgressUpdate(0.35, "Execution of tests in the sandbox");
-        observer.onNewLogAdded("[INFO] Start compil and test in sandbox");
-        
-        fr.octogenere.security.sandbox.SandboxService sandbox = fr.octogenere.security.sandbox.SandboxService.createDefault();
-        fr.octogenere.security.sandbox.SandboxResult sandboxResult = sandbox.run(project, java.util.List.of("mvn", "-q", "clean", "test"));
-        String sandboxLogs = "exit standard :\n" + sandboxResult.stdout() + "\nErrors :\n" + sandboxResult.stderr();
-        
+        observer.onProgressUpdate(0.35, "Exécution des tests dans la sandbox...");
+        observer.onNewLogAdded("[INFO] Compilation et tests dans la sandbox.");
+
+        String sandboxLogs;
+        try {
+            SandboxService sandbox = SandboxService.createDefault();
+            SandboxResult sandboxResult = sandbox.run(project, List.of("mvn", "-q", "clean", "test"));
+            sandboxLogs = "Code de sortie : " + sandboxResult.exitCode()
+                    + "\nSortie standard :\n" + sandboxResult.stdout()
+                    + "\nErreurs :\n" + sandboxResult.stderr();
+            observer.onNewLogAdded("[INFO] Tests sandbox terminés avec le code "
+                    + sandboxResult.exitCode() + ".");
+        } catch (SandboxException error) {
+            sandboxLogs = "Sandbox indisponible : analyse statique uniquement.";
+            observer.onNewLogAdded("[ATTENTION] Sandbox indisponible ; poursuite de l'analyse statique.");
+        }
+
         String prompt = promptBuilder.buildReviewPrompt(projectName, selectedCriteria, context, sandboxLogs);
 
         observer.onProgressUpdate(0.40, "Prompt d'analyse prêt.");
         observer.onNewLogAdded("[INFO] Appel de " + provider.providerName()
-                + " avec le modèle " + provider.modelName() + ".");
-        String json = provider.ask(prompt);
+                + " avec le modèle " + selectedModel + ".");
+        String json = provider.ask(prompt, selectedModel);
 
         checkInterrupted();
         observer.onProgressUpdate(0.80, "Réponse reçue, validation en cours...");
@@ -96,8 +113,25 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
         String configuration = "Analyse LLM du code source ; critères : "
                 + selectedCriteria.stream().map(EvaluationCriterion::label).reduce((a, b) -> a + ", " + b).orElse("");
         return new EvaluationReport(projectName, LocalDate.now(), configuration,
-                provider.providerName() + " — " + provider.modelName(), parsed.criteria(),
+                provider.providerName() + " — " + selectedModel, parsed.criteria(),
                 parsed.overallSummary());
+    }
+
+    @Override
+    public List<String> availableModels() {
+        return provider.availableModels();
+    }
+
+    @Override
+    public String configuredModel() {
+        return provider.modelName();
+    }
+
+    private String requireModel(String model) {
+        if (model == null || model.isBlank()) {
+            throw new IllegalArgumentException("Sélectionne un modèle d'IA.");
+        }
+        return model.trim();
     }
 
     private void checkInterrupted() throws IOException {

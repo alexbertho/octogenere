@@ -46,6 +46,8 @@ L'application démarre même si la configuration LLM est absente ou invalide. Le
 
 Le programme lit le fichier `.env` au démarrage. Les variables d'environnement du système, lorsqu'elles sont définies, sont prioritaires. Le fichier `.env` est ignoré par Git ; `.env.example` doit rester sans secret.
 
+Avec Gemini, le sélecteur interroge `models.list` en arrière-plan et propose uniquement les modèles compatibles avec `generateContent`. Si cette liste est vide ou inaccessible, `GOOGLE_MODEL` reste le modèle sélectionné.
+
 Le programme console utilise lui aussi le fournisseur choisi par `LLM_PROVIDER`. Compiler et lancer sa question de démonstration :
 
 ```bash

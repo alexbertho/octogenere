@@ -37,12 +37,19 @@ class LlmEvaluationEngineTest {
         EvaluationCriterion tests = new EvaluationCriterion("tests", "Tests", true, 0.4, 10);
         CriterionCatalog catalog = new CriterionCatalog(List.of(architecture, tests));
         AtomicReference<String> receivedPrompt = new AtomicReference<>();
+        AtomicReference<String> receivedModel = new AtomicReference<>();
         AtomicBoolean closed = new AtomicBoolean();
         LlmProvider provider = new LlmProvider() {
             @Override
             public String ask(String prompt) {
                 receivedPrompt.set(prompt);
                 return responseJson();
+            }
+
+            @Override
+            public String ask(String prompt, String model) {
+                receivedModel.set(model);
+                return ask(prompt);
             }
 
             @Override
@@ -64,17 +71,21 @@ class LlmEvaluationEngineTest {
         List<String> logs = new ArrayList<>();
 
         LlmEvaluationEngine engine = new LlmEvaluationEngine(provider, catalog);
-        EvaluationReport report = engine.analyze(project, List.of("Architecture", "Tests"),
+        EvaluationReport report = engine.analyze(project, List.of("Architecture", "Tests"), "modèle-choisi",
                 observer(progress, logs));
 
         assertEquals("projet-llm", report.projectName());
-        assertEquals("Faux provider — faux-modèle", report.modelName());
+        assertEquals("Faux provider — modèle-choisi", report.modelName());
+        assertEquals("modèle-choisi", receivedModel.get());
         assertEquals(List.of("Architecture", "Tests"), report.criterionResults().stream()
                 .map(result -> result.criterion()).toList());
         assertEquals(1.0, progress.getLast());
         assertTrue(logs.stream().anyMatch(log -> log.contains("Réponse du LLM validée")));
         assertTrue(receivedPrompt.get().contains("class Hello"));
         assertTrue(receivedPrompt.get().contains("UNTRUSTED_PROJECT_CONTENT_BEGIN"));
+        assertTrue(receivedPrompt.get().contains("--- START SANDBOX LOGS ---"));
+        assertTrue(receivedPrompt.get().indexOf("  ]\n}")
+                < receivedPrompt.get().indexOf("--- START SANDBOX LOGS ---"));
         assertFalse(receivedPrompt.get().contains("secret-value"));
 
         Path latex = new GenerateReportUseCase(new CriterionResultParser(), new LatexReportGenerator())
