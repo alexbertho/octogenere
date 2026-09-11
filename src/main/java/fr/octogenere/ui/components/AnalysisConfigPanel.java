@@ -14,6 +14,11 @@ import fr.octogenere.analysis.config.EvaluationCriterion;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * Panneau central permettant à l'utilisateur de configurer les paramètres de l'analyse.
+ * Affiche la liste des critères évalués, le bouton de lancement et la barre de progression.
+ * Délègue les actions utilisateur exclusivement au UIController.
+ */
 public class AnalysisConfigPanel extends VBox {
 
     private UIController controller;
@@ -22,6 +27,10 @@ public class AnalysisConfigPanel extends VBox {
     private Label statusLabel;
     private Button startBtn;
 
+    /**
+     * Constructeur du panneau de configuration.
+     * @param controller Le contrôleur central qui gèrera les actions de ce panneau.
+     */
     public AnalysisConfigPanel(UIController controller) {
         this(controller, CriterionCatalog.loadDefault().criteria(),
                 "Les fichiers du projet seront préparés puis analysés par le LLM configuré.");
@@ -34,6 +43,9 @@ public class AnalysisConfigPanel extends VBox {
         setupUI(criteria, modeDescription);
     }
 
+    /**
+     * Initialise et assemble les composants graphiques du panneau.
+     */
     private void setupUI(List<EvaluationCriterion> criteria, String modeDescription) {
         this.setSpacing(15);
         this.setPadding(new Insets(20));
@@ -63,6 +75,7 @@ public class AnalysisConfigPanel extends VBox {
         progressBar.setMaxWidth(Double.MAX_VALUE);
         statusLabel = new Label("Statut : En attente...");
 
+        // Ajout de tous les composants au conteneur principal
         this.getChildren().addAll(
                 title, modeNotice, criteriaContainer, new Separator(),
                 startBtn, new Separator(),
@@ -70,16 +83,25 @@ public class AnalysisConfigPanel extends VBox {
         );
     }
 
+    /**
+     * Ajoute une case à cocher (critère) dans le conteneur spécifié.
+     * @param container Le conteneur parent
+     * @param text Le libellé du critère.
+     * @param selectedByDefault Vrai si la case doit être cochée par défaut.
+     */
     private void addCriterion(VBox container, String text, boolean selectedByDefault) {
         CheckBox cb = new CheckBox(text);
         cb.setSelected(selectedByDefault);
+        // Si l'utilisateur modifie une case, on prévient le contrôleur pour invalider les anciens résultats
         cb.setOnAction(event -> controller.onConfigurationChanged());
         criteriaBoxes.add(cb);
         container.getChildren().add(cb);
     }
 
+    /**
+     * Récupère les critères sélectionnés et demande au contrôleur de démarrer l'analyse.
+     */
     private void handleStartAnalysis() {
-        // Récupérer la liste des critères cochés
         List<String> selectedCriteria = new ArrayList<>();
         for (CheckBox cb : criteriaBoxes) {
             if (cb.isSelected()) {
@@ -91,12 +113,20 @@ public class AnalysisConfigPanel extends VBox {
         controller.onStartAnalysis(selectedCriteria);
     }
 
-    // Méthodes pour permettre au contrôleur (Observer) de mettre à jour l'UI
-    public void updateProgress(double progress, String statusMessage) {
+    /**
+     * Met à jour la barre de progression et le texte de statut.
+     * (Appelé par le contrôleur depuis le thread JavaFX).
+     * @param progress Valeur entre 0.0 (début) et 1.0 (fin), ou -1.0 pour un état indéterminé.
+     * @param statusMessage Le message expliquant l'action en cours.
+     */    public void updateProgress(double progress, String statusMessage) {
         progressBar.setProgress(progress);
         statusLabel.setText("Statut : " + statusMessage);
     }
 
+    /**
+     * Active ou désactive les contrôles (cases à cocher, bouton) pendant un traitement.
+     * @param busy Vrai si une tâche est en cours.
+     */
     public void setBusy(boolean busy) {
         startBtn.setDisable(busy);
         for (CheckBox checkBox : criteriaBoxes) {
