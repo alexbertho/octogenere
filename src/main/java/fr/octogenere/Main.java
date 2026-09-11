@@ -1,6 +1,8 @@
 package fr.octogenere;
 
 import fr.octogenere.llm.LlmException;
+import fr.octogenere.llm.LlmProvider;
+import fr.octogenere.llm.google.GeminiProvider;
 import fr.octogenere.llm.openai.OpenAiProvider;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
@@ -10,6 +12,7 @@ import fr.octogenere.prompt.xml.XmlFileTreeBuilder;
 /** Point d'entrée de la première démonstration en console. */
 public class Main {
     public static void main(String[] args) {
+        /*
         String folderPath = ".";
         if (args.length > 0) {
             folderPath = String.join(" ", args);
@@ -22,7 +25,7 @@ public class Main {
             System.err.println("Fatal error. Unable to generate review prompt : " + e.getMessage());
             e.printStackTrace();
         }
-
+        */
         /*
         try {
             // Java ne lit pas les fichiers .env automatiquement.
@@ -48,6 +51,19 @@ public class Main {
             System.exit(1);
         }
         */
+
+        String testPrompt = "Projet Java ";
+
+        try {
+            LlmProvider provider = new GeminiProvider();
+
+            String json = provider.ask(testPrompt);
+
+            System.out.println("Réponse test :" + json);
+
+        } catch (LlmException e) {
+            System.err.println("Erreur côté IA : " + e.getMessage());
+        }
 
     }
 }

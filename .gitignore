@@ -27,3 +27,4 @@ out/
 # Fichiers du système
 .DS_Store
 Thumbs.db
+.env.example
