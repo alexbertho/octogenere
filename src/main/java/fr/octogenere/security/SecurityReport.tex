@@ -74,7 +74,7 @@ SandboxService.run
 
 \begin{itemize}
     \item In: projectDir (Path), command (List<String>).
-    \item Out: SandboxResult record --- exitCode (int), stdout (String), stderr (String), timedOut (boolean), duration (Duration).
+    \item Out: SandboxResult record, exitCode (int), stdout (String), stderr (String), timedOut (boolean), duration (Duration).
 \end{itemize}
 
 To execute untrusted commands (ex: mvn compile or mvn test) securely, we utilize isolated Docker containers.
@@ -145,7 +145,7 @@ PromptInjectionGuard.protect
 
 \begin{itemize}
     \item In: label (String, cosmetic only), content (String, the file's text).
-    \item Out: GuardedContent record --- safePromptFragment (String), scanResult (ScanResult record: riskLevel (RiskLevel), findings (List<Finding>)).
+    \item Out: GuardedContent record, safePromptFragment (String), scanResult (ScanResult record: riskLevel (RiskLevel), findings (List<Finding>)).
 \end{itemize}
 
 
