@@ -25,15 +25,7 @@
 \paragraph{A note on AI usage.} I used AI quite a lot, not only to help me write the code but also to draft this report and its graphs. Of course I read through everything afterwards, checked it against what was actually build, and rewrote it in my own words.
 
 \section{Introduction}
-The OctoGenere application, developed by our team of 8, is designed to automatically evaluate software projects using static analysis, dynamic execution (such as compiling code or running tests), and Large Language Models (LLMs). Because our application evaluates and potentially executes projects written by unknown third parties, we must treat all this code as completely untrustworthy.
-
-My responsibility specifically was to design the subsystem that takes care of the security. The requirements given in the Project definition explicitly forbid executing evaluated projects directly on the host machine. This issue can be split into two different architectural problems:
-\begin{itemize}
-    \item \textbf{Execution Isolation:} If the analysis of one of the Java Projects needs to compile code or run tests, it is very important that this happens in a restricted environment (a so-called sandbox) that cannot damage the host machine, read unauthorized files, or access the network.
-    \item \textbf{Prompt Injection Defense:} Not only the compiled project but also the source code itself must be treated as untrustworthy, as a malicious user could hide instructions (prompts) in comments to manipulate the behavior of the LLM that takes care of the evaluation.
-\end{itemize}
-
-Both of these features are implemented in the \texttt{fr.octogenere.security} package, split into the \texttt{sandbox} and \texttt{injection} sub-packages.
+The OctoGenere project automatically evaluates untrusted third-party software projects. My responsibility during the group poject was the security subsystem which takes care of isolating any code that is executed, and making sure the LLM treats the source code as data and not as instructions. Both live in the \texttt{fr.octogenere.security} package, that is divided into the \texttt{sandbox} and \texttt{injection} sub-packages.
 
 \section{Threats and Responsibilities of the Security System}
 Before I started writing the code, it was crucial to define in detail what threats exactly the system is designed to defend against.
