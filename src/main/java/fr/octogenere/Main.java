@@ -20,7 +20,6 @@ import io.github.cdimascio.dotenv.DotenvException;
 /** Point d'entrée de la première démonstration en console. */
 public class Main {
     public static void main(String[] args) {
-        /*
         String folderPath = ".";
         if (args.length > 0) {
             folderPath = String.join(" ", args);
@@ -47,14 +46,26 @@ public class Main {
             System.err.println(configFile + " cant be read");
         }
 
+        String prompt = null;
         try {
-            String prompt = PromptBuilder.BuildReviewPrompt(folderPath, criteria);
+            prompt = PromptBuilder.BuildReviewPrompt(folderPath, criteria);
             System.out.println("Prompt generated : \n" + prompt);
         } catch (Exception e) {
             System.err.println("Fatal error. Unable to generate review prompt : " + e.getMessage());
             e.printStackTrace();
         }
-        */
+
+        try {
+            LlmProvider provider = new GeminiProvider();
+
+            String json = provider.ask(prompt);
+
+            System.out.println("Réponse test :" + json);
+
+        } catch (LlmException e) {
+            System.err.println("Erreur côté IA : " + e.getMessage());
+        }
+
         /*
         try {
             String apiKey = dotenv.get("OPENAI_API_KEY");
@@ -76,6 +87,8 @@ public class Main {
         }
         */
 
+
+        /* 
         String testPrompt = "Projet Java ";
 
         try {
@@ -88,6 +101,6 @@ public class Main {
         } catch (LlmException e) {
             System.err.println("Erreur côté IA : " + e.getMessage());
         }
-
+        */
     }
 }
