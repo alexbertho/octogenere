@@ -84,6 +84,8 @@ public final class EvaluationResponseParser {
     }
 
     private record RawResponse(
+            @JsonProperty(value = "score", required = true) float score,
+            @JsonProperty(value = "maxScore", required = true) float maxScore,
             @JsonProperty(value = "overallSummary", required = true) String overallSummary,
             @JsonProperty(value = "criteria", required = true) List<CriterionResult> criteria) {
     }

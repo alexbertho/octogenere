@@ -1,5 +1,7 @@
 package fr.octogenere.llm;
 
+import java.util.List;
+
 /** Contrat commun pour envoyer une demande textuelle à un modèle de langage. */
 public interface LlmProvider extends AutoCloseable {
     /**
@@ -10,6 +12,20 @@ public interface LlmProvider extends AutoCloseable {
      * @throws LlmException si la demande est invalide ou si aucune réponse exploitable n'est obtenue
      */
     String ask(String prompt);
+
+    /**
+     * Envoie une demande au modèle choisi dans l'interface.
+     * Les implémentations capables de changer de modèle à la volée redéfinissent
+     * cette méthode.
+     */
+    default String ask(String prompt, String model) {
+        return ask(prompt);
+    }
+
+    /** Modèles que le fournisseur rend disponibles à l'utilisateur. */
+    default List<String> availableModels() {
+        return List.of(modelName());
+    }
 
     /** Nom affichable du fournisseur, sans information sensible. */
     default String providerName() {

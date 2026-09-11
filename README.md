@@ -46,6 +46,8 @@ L'application démarre même si la configuration LLM est absente ou invalide. Le
 
 Le programme lit le fichier `.env` au démarrage. Les variables d'environnement du système, lorsqu'elles sont définies, sont prioritaires. Le fichier `.env` est ignoré par Git ; `.env.example` doit rester sans secret.
 
+Avec Gemini, le sélecteur interroge `models.list` en arrière-plan et propose uniquement les modèles compatibles avec `generateContent`. Si cette liste est vide ou inaccessible, `GOOGLE_MODEL` reste le modèle sélectionné.
+
 Le programme console utilise lui aussi le fournisseur choisi par `LLM_PROVIDER`. Compiler et lancer sa question de démonstration :
 
 ```bash
@@ -70,27 +72,27 @@ Les tests graphiques s'activent séparément et nécessitent une session graphiq
 mvn -Doctogenere.ui.tests=true -Dtest=UiWorkflowTest test
 ```
 
-## Security module: sandboxed execution & prompt-injection defense
+## Module de Sécurité : Execution dans un environnement protégé Sandbox
 
-`fr.octogenere.security` provides two independent things, usable by any other module:
+`fr.octogenere.security` fournis deux fonctionnalités, utilisables dans n'importe quel module :
 
-- **`security.sandbox`** — runs a command on an analyzed project inside a disposable, unprivileged Docker container (non-root user, network disabled by default, read-only filesystem except a writable scratch tmpfs, CPU/memory/process/time limits, forced cleanup even on timeout). Entry point: `SandboxService.createDefault().run(projectDir, command)`.
-- **`security.injection`** — prepares a file's content before it's sent to an LLM: wraps it in explicit delimiters and heuristically flags prompt-injection attempts (e.g. a comment asking the model to ignore its previous instructions), without dropping the content. Entry point: `PromptInjectionGuard.createDefault().protect(fileName, content)`.
+- **`security.sandbox`** - Execute une commande sur le projet a analyser. Fait au sein d'un environnement Docker temporaire et non priviligié (pas d'utilisateur root, aucun accès internet, filesystem en lecture seule formis sur un filesystem temporaire, limites sur CPU/Memoire/Processus/Temps, reinitialisation forcée de l'environnement). Point d'entrée : `SandboxService.createDefault().run(projectDir, command)`.
+- **`security.injection`** - Prépare le contenu d'un fichier avant qu'il soit envoyer au LLM : le fichier est délimités en sections explicites et les tentatives de prompt injection sont commentées et annotées (ex : commentaires demandant au modele d'ignorer les instructions précedentes), sans pour autant qu'il n'y ai de perte de données. Point d'entrée : `PromptInjectionGuard.createDefault().protect(fileName, content)`.
 
-### Prerequisites
+### Prérequis
 
-- JDK 21 and Maven (same as the rest of the project).
-- [Docker](https://www.docker.com/) installed and running — only needed to actually execute code in the sandbox or run its integration tests. Everything else (including `mvn test`) works without it.
+- JDK 21 et Maven
+- [Docker](https://www.docker.com/) : installé et en cours d'execution - utilisé uniquement pour executer le code dans l'environnement Sandbox ou lancer ces tests d'intégrations. Le reste (dont `mvn test`) fonctionne sans.
 
-### Getting it running
+### Lancer le projet
 
-1. Build the sandbox image once (rebuild it any time `docker/Dockerfile` or `docker/entrypoint.sh` changes):
+1. Construire l'image de la Sandbox au moins une fois (attention : penser à reconstruire en cas d'un changement de `docker/Dockerfile` ou bien de `docker/entrypoint.sh`) :
 
    ```bash
    docker build -t octogenere/sandbox:1.0 -f docker/Dockerfile docker
    ```
 
-2. Use it from Java:
+2. Utilisation dans Java :
 
    ```java
    SandboxService sandbox = SandboxService.createDefault();
@@ -110,11 +112,11 @@ mvn -Doctogenere.ui.tests=true -Dtest=UiWorkflowTest test
    - In: `label` (`String`, cosmetic only), `content` (`String`, the file's text).
    - Out: `GuardedContent` record — `safePromptFragment` (`String`), `scanResult` (`ScanResult` record: `riskLevel` (`RiskLevel`), `findings` (`List<Finding>`)).
 
-### Running the tests
+### Execution des tests
 
-- `mvn test` runs everything except Docker-dependent tests (they're named `*IT.java`, so Surefire skips them by default) — this includes all of `security.sandbox` and `security.injection`, using a `FakeSandboxExecutor` instead of real Docker.
+- `mvn test` execute tout hormis les tests qui dépendent de Docker (ils s'appelent `*IT.java`, Surefire les ignorent par défaut) - cela inclu `security.sandbox` et `security.injection`, utilisant `FakeSandboxExecutor` plutot qu'une vraie instance de Docker.
 - To also run the real Docker integration tests (build the image first, see above):
-
+- Pour executer les veritables tests d'integration de Docker (commencer par construire les images, voir ci-dessus) : 
   ```bash
   mvn -Dtest=fr.octogenere.security.sandbox.DockerSandboxExecutorIT test
   ```
