@@ -16,6 +16,7 @@ import fr.octogenere.llm.LlmProvider;
 import fr.octogenere.prompt.PromptBuilder;
 import fr.octogenere.prompt.xml.ProjectContext;
 import fr.octogenere.prompt.xml.XmlFileTreeBuilder;
+import fr.octogenere.security.injection.PromptInjectionGuard;
 import fr.octogenere.security.sandbox.SandboxException;
 import fr.octogenere.security.sandbox.SandboxResult;
 import fr.octogenere.security.sandbox.SandboxService;
@@ -87,9 +88,20 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
         try {
             SandboxService sandbox = SandboxService.createDefault();
             SandboxResult sandboxResult = sandbox.run(project, List.of("mvn", "-q", "clean", "test"));
+
+            PromptInjectionGuard guard = PromptInjectionGuard.createDefault();
+            PromptInjectionGuard.GuardedContent guardedStdout =
+                    guard.protect("sandbox-stdout", sandboxResult.stdout());
+            PromptInjectionGuard.GuardedContent guardedStderr =
+                    guard.protect("sandbox-stderr", sandboxResult.stderr());
+            if (guardedStdout.scanResult().suspicious() || guardedStderr.scanResult().suspicious()) {
+                observer.onNewLogAdded("[SÉCURITÉ] Contenu potentiellement injecté détecté "
+                        + "dans la sortie de la sandbox.");
+            }
+
             sandboxLogs = "Code de sortie : " + sandboxResult.exitCode()
-                    + "\nSortie standard :\n" + sandboxResult.stdout()
-                    + "\nErreurs :\n" + sandboxResult.stderr();
+                    + "\nSortie standard :\n" + guardedStdout.safePromptFragment()
+                    + "\nErreurs :\n" + guardedStderr.safePromptFragment();
             observer.onNewLogAdded("[INFO] Tests sandbox terminés avec le code "
                     + sandboxResult.exitCode() + ".");
         } catch (SandboxException error) {
