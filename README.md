@@ -98,9 +98,17 @@ mvn -Doctogenere.ui.tests=true -Dtest=UiWorkflowTest test
    // result.exitCode(), result.stdout(), result.stderr(), result.timedOut()
 
    PromptInjectionGuard guard = PromptInjectionGuard.createDefault();
-   PromptInjectionGuard.GuardedContent guarded = guard.protect("Foo.java", fileContent);
+   PromptInjectionGuard.GuardedContent guarded = guard.protect("Foo.java", fileContent);  //Foo.java optional and purely cosmetic!, the fileContent string is the actual source code
    String safeToSendToTheLlm = guarded.safePromptFragment();
    ```
+
+   **`SandboxService.run`**
+   - In: `projectDir` (`Path`), `command` (`List<String>`).
+   - Out: `SandboxResult` record — `exitCode` (`int`), `stdout` (`String`), `stderr` (`String`), `timedOut` (`boolean`), `duration` (`Duration`).
+
+   **`PromptInjectionGuard.protect`**
+   - In: `label` (`String`, cosmetic only), `content` (`String`, the file's text).
+   - Out: `GuardedContent` record — `safePromptFragment` (`String`), `scanResult` (`ScanResult` record: `riskLevel` (`RiskLevel`), `findings` (`List<Finding>`)).
 
 ### Running the tests
 

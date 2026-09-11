@@ -27,20 +27,26 @@ import java.util.function.Consumer;
 
 /** Coordonne les actions de la fenêtre et délègue l'analyse et l'export au cœur. */
 public class UIController implements AnalysisObserver, AutoCloseable {
+    // Services métiers
     private final EvaluationEngine evaluationEngine;
     private final ProjectExplorerService explorerService;
     private final GenerateReportUseCase reportUseCase;
     private final Path reportsDirectory;
+
+    // Pool de threads pour exécuter les tâches lourdes en arrière-plan
     private final ExecutorService worker = Executors.newSingleThreadExecutor(task -> {
         Thread thread = new Thread(task, "octogenere-ui-worker");
         thread.setDaemon(true);
         return thread;
     });
 
+    // Vues
     private ProjectSelectionBar selectionBar;
     private ProjectTreePanel treePanel;
     private AnalysisConfigPanel configPanel;
     private LogAndResultPanel logPanel;
+
+    // Etats de l'application
     private Path selectedProject;
     private EvaluationReport lastReport;
     private Task<?> currentTask;
@@ -55,6 +61,9 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         this.reportsDirectory = Objects.requireNonNull(reportsDirectory);
     }
 
+    /**
+     * Connecte les différents panneaux de l'interface au contrôleur.
+     */
     public void attachViews(ProjectSelectionBar selectionBar, ProjectTreePanel treePanel,
                             AnalysisConfigPanel configPanel, LogAndResultPanel logPanel) {
         this.selectionBar = selectionBar;
@@ -63,6 +72,10 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         this.logPanel = logPanel;
     }
 
+    /**
+     * Déclenchée lors de la sélection d'un dossier de projet par l'utilisateur.
+     * @param directory Le dossier racine du projet à analyser.
+     */
     public void onProjectSelected(File directory) {
         if (busy || closed || directory == null) {
             return;
@@ -70,10 +83,13 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         Path project = directory.toPath().toAbsolutePath().normalize();
         selectedProject = null;
         invalidateResults();
+
+        // Mise à jour immédiate de l'UI avant le traitement lourd
         selectionBar.setProjectPath("Chargement...");
         treePanel.clear();
         configPanel.updateProgress(-1, "Lecture du dossier...");
 
+        // Création d'une tâche asynchrone pour l'exploration du disque
         Task<FileNode> task = new Task<>() {
             @Override
             protected FileNode call() throws Exception {
@@ -89,6 +105,10 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         }, Operation.PROJECT);
     }
 
+    /**
+     * Déclenchée pour lancer l'analyse du projet sélectionné par le LLM.
+     * @param criteria La liste des critères d'évaluation sélectionnés.
+     */
     public void onStartAnalysis(List<String> criteria) {
         if (busy || closed) {
             return;
@@ -107,6 +127,7 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         configPanel.updateProgress(0, "Démarrage...");
         logPanel.appendLog("[INFO] Lancement de l'analyse.");
 
+        // Lancement du moteur d'analyse en arrière-plan
         Task<EvaluationReport> task = new Task<>() {
             @Override
             protected EvaluationReport call() throws Exception {
@@ -125,6 +146,9 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         }, Operation.ANALYSIS);
     }
 
+    /**
+     * Déclenchée pour générer le document LaTeX à partir des résultats obtenus.
+     */
     public void onGenerateReport() {
         if (busy || closed) {
             return;
@@ -157,11 +181,17 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         }
     }
 
+    /**
+     * Réinitialise l'état des résultats (désactive la génération de rapport).
+     */
     private void invalidateResults() {
         lastReport = null;
         logPanel.setReportButtonEnabled(false);
     }
 
+    /**
+     * Exécute une tâche de manière asynchrone et gère les retours sur le thread UI.
+     */
     private <T> void startTask(Task<T> task, Consumer<T> onSuccess, Operation operation) {
         currentTask = task;
         setBusy(true);
@@ -219,6 +249,9 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         configPanel.setBusy(value);
         logPanel.setReportButtonEnabled(!value && lastReport != null);
     }
+
+
+// Implementation de l'Observer
 
     @Override
     public void onProgressUpdate(double progress, String statusMessage) {

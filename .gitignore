@@ -24,6 +24,11 @@ out/
 # Brouillon local du rapport technique
 /draft.md
 
+# Personal working notes (Gilles - security branch, not shared)
+/reportGilles.txt
+/Todo.md
+/FutureFixesAndAdditions.md
+
 # Fichiers du système
 .DS_Store
 __MACOSX/
