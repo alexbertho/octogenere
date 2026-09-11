@@ -22,6 +22,11 @@ import io.github.cdimascio.dotenv.DotenvException;
 
 import java.nio.file.Path;
 
+/**
+ * Point d'entrée de l'interface graphique JavaFX.
+ * Responsable de l'assemblage de l'architecture MVC : instancie les services métiers,
+ * le contrôleur, configure le layout principal et applique le CSS.
+ */
 public class MainApp extends Application {
     private UIController controller;
 
@@ -32,29 +37,35 @@ public class MainApp extends Application {
         CriterionCatalog catalog = CriterionCatalog.loadDefault();
         EngineSetup setup = configureEngine(catalog);
 
+        // Initialisation des services métiers
         controller = new UIController(setup.engine(), new ProjectExplorerService(),
                 new GenerateReportUseCase(new CriterionResultParser(), new LatexReportGenerator()),
                 Path.of("target", "reports"));
 
+        // Création des composants visuels
         ProjectSelectionBar topBar = new ProjectSelectionBar(primaryStage, controller);
         ProjectTreePanel leftPanel = new ProjectTreePanel();
         AnalysisConfigPanel centerPanel = new AnalysisConfigPanel(
                 controller, catalog.criteria(), setup.modeDescription());
         LogAndResultPanel bottomPanel = new LogAndResultPanel(controller, setup.initialLog());
 
+        // Liaison des vues avec le contrôleur
         controller.attachViews(topBar, leftPanel, centerPanel, bottomPanel);
 
+        // Assemblage dans le conteneur principal
         BorderPane root = new BorderPane();
         root.setTop(topBar);
         root.setLeft(leftPanel);
         root.setCenter(centerPanel);
         root.setBottom(bottomPanel);
 
+        // Rend la fenêtre principale scrollable
         ScrollPane scrollPane = new ScrollPane(root);
         scrollPane.setFitToWidth(true);
         scrollPane.setFitToHeight(true);
         scrollPane.getStyleClass().add("main-scroll-pane");
 
+        // Configuration de la fenêtre et chargement du CSS
         Scene scene = new Scene(scrollPane, 1000, 720);
         primaryStage.setMinWidth(850);
         primaryStage.setMinHeight(650);
@@ -94,6 +105,10 @@ public class MainApp extends Application {
     private record EngineSetup(EvaluationEngine engine, String modeDescription, String initialLog) {
     }
 
+    /**
+     * Méthode appelée automatiquement à la fermeture de la fenêtre.
+     * Permet d'arrêter proprement les threads en arrière-plan.
+     */
     @Override
     public void stop() {
         if (controller != null) {

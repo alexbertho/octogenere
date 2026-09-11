@@ -11,6 +11,10 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 
+/**
+ * Panneau latéral gauche affichant l'arborescence des fichiers du projet analysé.
+ * Utilise un TreeView JavaFX avec un rendu personnalisé des cellules (CellFactory).
+ */
 public class ProjectTreePanel extends VBox {
 
     private TreeView<String> treeView;
@@ -19,6 +23,9 @@ public class ProjectTreePanel extends VBox {
         setupUI();
     }
 
+    /**
+     * Initialise l'interface utilisateur et configure le style personnalisé de l'arbre.
+     */
     private void setupUI() {
         this.setSpacing(5);
         this.setPadding(new Insets(10));
@@ -33,6 +40,7 @@ public class ProjectTreePanel extends VBox {
         treeView.setId("project-tree");
         VBox.setVgrow(treeView, Priority.ALWAYS);
 
+        // Personnalisation des cellules pour appliquer les couleurs selon l'extension du fichier
         treeView.setCellFactory(tv -> new TreeCell<String>() {
             @Override
             protected void updateItem(String item, boolean empty) {
@@ -43,6 +51,7 @@ public class ProjectTreePanel extends VBox {
                     setStyle("");
                 } else {
                     setText(item);
+                    // Application des classes CSS définies dans style.css
                     if (item.endsWith(".java")) {
                         getStyleClass().add("java-file");
                     } else if (item.startsWith(".")) {
@@ -57,18 +66,27 @@ public class ProjectTreePanel extends VBox {
         this.getChildren().addAll(title, treeView);
     }
 
-    // Méthode appelée par le contrôleur lorsqu'un projet est sélectionné
+    /**
+     * Charge une nouvelle arborescence de fichiers dans le panneau.
+     * @param rootDirectory Le nœud racine généré par le ProjectExplorerService.
+     */
     public void loadProjectTree(FileNode rootDirectory) {
         TreeItem<String> rootItem = createTreeItem(rootDirectory);
         rootItem.setExpanded(true);
         treeView.setRoot(rootItem);
     }
 
+    /**
+     * Vide le contenu de l'arbre (utilisé lors du chargement d'un nouveau projet).
+     */
     public void clear() {
         treeView.setRoot(null);
     }
 
-    // Parcours récursif du dossier
+    /**
+     * Construit récursivement les éléments de l'arbre JavaFX (TreeItem)
+     * à partir de la structure de données métier (FileNode).
+     */
     private TreeItem<String> createTreeItem(FileNode file) {
         TreeItem<String> item = new TreeItem<>(file.name());
 
