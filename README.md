@@ -102,6 +102,14 @@ mvn -Doctogenere.ui.tests=true -Dtest=UiWorkflowTest test
    String safeToSendToTheLlm = guarded.safePromptFragment();
    ```
 
+   **`SandboxService.run`**
+   - In: `projectDir` (`Path`), `command` (`List<String>`).
+   - Out: `SandboxResult` record — `exitCode` (`int`), `stdout` (`String`), `stderr` (`String`), `timedOut` (`boolean`), `duration` (`Duration`).
+
+   **`PromptInjectionGuard.protect`**
+   - In: `label` (`String`, cosmetic only), `content` (`String`, the file's text).
+   - Out: `GuardedContent` record — `safePromptFragment` (`String`), `scanResult` (`ScanResult` record: `riskLevel` (`RiskLevel`), `findings` (`List<Finding>`)).
+
 ### Running the tests
 
 - `mvn test` runs everything except Docker-dependent tests (they're named `*IT.java`, so Surefire skips them by default) — this includes all of `security.sandbox` and `security.injection`, using a `FakeSandboxExecutor` instead of real Docker.
