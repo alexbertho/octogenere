@@ -24,9 +24,6 @@
 
 \paragraph{A note on AI usage.} I used AI quite a lot, not only to help me write the code but also to draft this report and its graphs. Of course I read through everything afterwards, checked it against what was actually build, and rewrote it in my own words.
 
-\section{Introduction}
-The OctoGenere project automatically evaluates untrusted third-party software projects. My responsibility during the group poject was the security subsystem which takes care of isolating any code that is executed, and making sure the LLM treats the source code as data and not as instructions. Both live in the \texttt{fr.octogenere.security} package, that is divided into the \texttt{sandbox} and \texttt{injection} sub-packages.
-
 \section{Threats and Responsibilities of the Security System}
 Before I started writing the code, it was crucial to define in detail what threats exactly the system is designed to defend against.
 
@@ -237,8 +234,5 @@ Even though the current architecture is reasonably robust it has a few limitatio
     \item \textbf{Heuristic Evasion:} The scanner is regex-based, so it can be fooled very easily for example by simply rephrasing the prompt.
     \item \textbf{Ambiguous Exit Codes:} Currently the exit code 137 means either a timeout or an out-of-memory kill, currently we can't yet tell which.
 \end{itemize}
-
-\section{Conclusion}
-The security module I created successfully takes care of safely running untrusted code and cleaning up untrusted source code behind a simple interface. Because it stays generic (allows any command) and wraps instead of removing suspicious code, it scales well and is safe to utilize without losing data due to false positives.
 
 \end{document}
