@@ -40,7 +40,14 @@ public final class UntrustedContentWrapper {
      * file can't forge a fake end-of-block marker.
      */
     public static String wrap(String label, String rawContent) {
-        String safeLabel = label == null || label.isBlank() ? "unnamed-file" : label;
+        String safeLabel = label == null || label.isBlank()
+                ? "unnamed-file"
+                : sanitize(label)
+                        .replace(BEGIN_TAG, "[tag removed]")
+                        .replace(END_TAG, "[tag removed]")
+                        .replace('\n', '_')
+                        .replace('\r', '_')
+                        .replace('\t', '_');
         String content = sanitize(rawContent)
                 .replace(BEGIN_TAG, "[tag removed]")
                 .replace(END_TAG, "[tag removed]");

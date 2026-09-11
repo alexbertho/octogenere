@@ -51,7 +51,7 @@ public class OpenAiProvider implements LlmProvider, AutoCloseable {
         ResponseCreateParams request = ResponseCreateParams.builder()
                 .model(model)
                 .input(prompt)
-                .maxOutputTokens(1024)
+                .maxOutputTokens(4096)
                 .store(false)
                 .build();
 
@@ -108,6 +108,16 @@ public class OpenAiProvider implements LlmProvider, AutoCloseable {
             throw new LlmException("OpenAI n'a renvoyé aucune réponse textuelle.");
         }
         return answer;
+    }
+
+    @Override
+    public String providerName() {
+        return "OpenAI";
+    }
+
+    @Override
+    public String modelName() {
+        return model;
     }
 
     @Override
