@@ -1,22 +1,24 @@
 # Rapport académique OctoGenere
 
-Le PDF final et sa source d'entrée sont à la racine :
+Le rapport complet se trouve dans ce dossier :
 
-- `Rapport-OctoGenere.pdf`
-- `Rapport-OctoGenere.tex`
+- `Rapport-OctoGenere.pdf` : document final ;
+- `main.tex` : source d'entrée ;
+- `01-introduction.tex` à `04-validation.tex` : chapitres ;
+- `assets/` : logo et crédits.
 
-Le brouillon original `Rapport Projet SE & DP.pdf` est conservé. Les quatre fichiers de chapitre de ce dossier forment le contenu du rapport. Le document décrit le code au commit `56e7ae8` du 11 septembre 2026 ; les limitations et les évolutions envisagées sont distinguées de l'implémentation.
+Le document décrit le code au commit `c779781` du 11 septembre 2026 ; les limitations et les évolutions envisagées sont distinguées de l'implémentation.
 
 ## Compilation
 
 Depuis la racine, avec XeLaTeX, latexmk, les polices TeX Gyre Pagella et Heros, Latin Modern Mono, ainsi que les paquets LaTeX standards (dont TikZ et tcolorbox) :
 
 ```bash
-latexmk -xelatex -interaction=nonstopmode -halt-on-error -outdir=target/rapport Rapport-OctoGenere.tex
-cp target/rapport/Rapport-OctoGenere.pdf Rapport-OctoGenere.pdf
+latexmk -xelatex -interaction=nonstopmode -halt-on-error -outdir=target/rapport docs/rapport/main.tex
+cp target/rapport/main.pdf docs/rapport/Rapport-OctoGenere.pdf
 ```
 
-`main.tex` constitue une entrée secondaire pour les outils lancés depuis `docs/rapport` (`latexmk -xelatex -outdir=build main.tex`). Les fichiers de compilation restent dans les dossiers de build ignorés par Git.
+Les fichiers intermédiaires de compilation restent dans `target/rapport`, ignoré par Git.
 
 ## Sources et validation
 

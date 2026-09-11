@@ -105,7 +105,7 @@ Dans la fenêtre, sélectionner le projet et les critères, vérifier le modèle
 
 \subsection*{Valider les composants}
 \begin{lstlisting}
-mvn --batch-mode --no-transfer-progress verify
+mvn --batch-mode --no-transfer-progress test
 \end{lstlisting}
 Le résultat standard documenté est de 109 tests recensés : 104 réussis et 5 non exécutés. Les rapports XML sont produits dans \code{target/surefire-reports}. Le fichier \code{docs/rapport/validation-tests.json} en conserve une synthèse numérique pour la version décrite, sans les propriétés d'environnement des rapports bruts.
 
@@ -126,8 +126,8 @@ Ces commandes sont un protocole de reproduction ; leur présence dans cette anne
 Avec XeLaTeX, latexmk et les polices TeX Gyre installés :
 \begin{lstlisting}
 latexmk -xelatex -interaction=nonstopmode -halt-on-error \
-  -outdir=target/rapport Rapport-OctoGenere.tex
-cp target/rapport/Rapport-OctoGenere.pdf Rapport-OctoGenere.pdf
+  -outdir=target/rapport docs/rapport/main.tex
+cp target/rapport/main.pdf docs/rapport/Rapport-OctoGenere.pdf
 \end{lstlisting}
 Le document est distinct d'une évaluation automatiquement générée par l'application. Le logo institutionnel est inclus dans les ressources du rapport et les schémas sont construits en vectoriel avec TikZ ; aucune récupération réseau n'est nécessaire à la recompilation.
 
@@ -145,8 +145,8 @@ Document fourni dans le dépôt : \code{docs/sujet2627-m1-en.pdf}. En particulie
 
 \bibitem{depot}
 Groupe 3. \emph{OctoGenere : code source, documentation et tests}.
-Branche \code{dev}, version \code{56e7ae8}, 11 septembre 2026.
-\url{https://github.com/alexbertho/octogenere/tree/56e7ae8}.
+Branche \code{dev}, version \code{c779781}, 11 septembre 2026.
+\url{https://github.com/alexbertho/octogenere/tree/c779781}.
 Les descriptions d'implémentation et les résultats de test du rapport se rapportent à cette version.
 
 \bibitem{gof}

@@ -1,5 +1,5 @@
 {
-  "revision": "56e7ae8",
+  "revision": "c779781",
   "validation_date": "2026-09-11",
   "command": "mvn --batch-mode --no-transfer-progress test",
   "provenance": "Fresh Surefire reports from the validated revision; *IT reports excluded.",

@@ -3,7 +3,7 @@
 \subsection{Une application modulaire à organisation MVC}
 OctoGenere est une application Java unique, organisée en packages. Le terme \emph{module} désigne ici une séparation logique ; il ne s'agit ni de microservices ni de modules Maven déployés séparément. L'interface suit une organisation MVC adaptée à JavaFX : les vues collectent les actions et présentent les données ; \code{UIController} coordonne les traitements ; les services métier réalisent l'exploration, l'analyse et l'export.
 
-\code{MainApp} constitue le point d'assemblage. Il charge la configuration et le catalogue, crée le fournisseur et le moteur, puis relie le contrôleur aux panneaux. Cette construction explicite rend les dépendances visibles sans imposer un framework d'injection. Le moteur dépend de \code{LlmProvider} et de \code{AnalysisObserver}, pas d'un contrôle graphique concret.
+\code{Main} est le point d'entrée unique déclaré dans Maven et délègue le démarrage à l'application JavaFX \code{MainApp}. Celle-ci constitue le point d'assemblage : elle charge la configuration et le catalogue, crée le fournisseur et le moteur, puis relie le contrôleur aux panneaux. Cette construction explicite rend les dépendances visibles sans imposer un framework d'injection. Le moteur dépend de \code{LlmProvider} et de \code{AnalysisObserver}, pas d'un contrôle graphique concret.
 
 \begin{figure}[H]
 \centering
@@ -33,7 +33,7 @@ OctoGenere est une application Java unique, organisée en packages. Le terme \em
 
 L'exploration visuelle relève de \code{ProjectExplorerService}, qui construit les nœuds de l'arbre. Le composant \code{XmlFileTreeBuilder} lit les contenus retenus pour le prompt. Ces deux parcours ont des finalités et des limites différentes ; leurs représentations ne sont donc pas strictement identiques.
 
-\sourcecode{\code{ui/MainApp.java}, \code{ui/controller/UIController.java}, packages \code{analysis/model}, \code{project} et \code{prompt/xml}}
+\sourcecode{\code{Main.java}, \code{ui/MainApp.java}, \code{ui/controller/UIController.java}, packages \code{analysis/model}, \code{project} et \code{prompt/xml}}
 
 \clearpage
 \suite{Architecture logicielle — comportement dynamique}
