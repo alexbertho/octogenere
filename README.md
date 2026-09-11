@@ -91,7 +91,7 @@ mvn -Doctogenere.ui.tests=true -Dtest=UiWorkflowTest test
    // result.exitCode(), result.stdout(), result.stderr(), result.timedOut()
 
    PromptInjectionGuard guard = PromptInjectionGuard.createDefault();
-   PromptInjectionGuard.GuardedContent guarded = guard.protect("Foo.java", fileContent);
+   PromptInjectionGuard.GuardedContent guarded = guard.protect("Foo.java", fileContent);  //Foo.java optional and purely cosmetic!, the fileContent string is the actual source code
    String safeToSendToTheLlm = guarded.safePromptFragment();
    ```
 
