@@ -20,7 +20,6 @@ import fr.octogenere.prompt.PromptBuilder;
 /** Point d'entrée de la première démonstration en console. */
 public class Main {
     public static void main(String[] args) {
-
         String folderPath = ".";
         if (args.length > 0) {
             folderPath = String.join(" ", args);
@@ -68,6 +67,6 @@ public class Main {
         } catch (LlmException e) {
             System.err.println("Erreur côté IA : " + e.getMessage());
         }
-
+        */
     }
 }

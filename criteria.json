@@ -1,0 +1,20 @@
+{
+  "architecture": {
+    "label": "Architecture",
+    "enabled": true,
+    "weight": 0.3,
+    "maxScore": 10
+  },
+  "code_quality": {
+    "label": "Code quality",
+    "enabled": true,
+    "weight": 0.3,
+    "maxScore": 10
+  },
+  "tests": {
+    "label": "Tests",
+    "enabled": false,
+    "weight": 0,
+    "maxScore": 10
+  }
+}
