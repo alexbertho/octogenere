@@ -1,18 +1,19 @@
 package fr.octogenere.prompt;
 
+import java.util.List;
+
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import fr.octogenere.analysis.config.EvaluationCriterion;
 import fr.octogenere.prompt.xml.ProjectContext;
-
-import java.util.List;
 
 /** Construit la consigne de revue et son contrat de réponse JSON. */
 public final class PromptBuilder {
     private final ObjectMapper objectMapper = new ObjectMapper();
 
     public String buildReviewPrompt(String projectName, List<EvaluationCriterion> criteria,
-                                    ProjectContext context) {
+            ProjectContext context, String sandboxLogs) {
         if (projectName == null || projectName.isBlank()) {
             throw new IllegalArgumentException("Le nom du projet ne doit pas être vide.");
         }
@@ -49,6 +50,14 @@ public final class PromptBuilder {
                     .append("\"recommendations\": [\"string\"]}");
             prompt.append(index < criteria.size() - 1 ? ",\n" : "\n");
         }
+
+        if (sandboxLogs != null && !sandboxLogs.isBlank()) {
+            prompt.append("\n--- START SANDBOX LOGS---\n")
+                    .append("It's the logs from compiling and testing the project, use them to evaluate if the code works:\n")
+                    .append(sandboxLogs)
+                    .append("\n--- END SANDBOX LOGS ---\n");
+        }
+
         prompt.append("  ]\n}\n\n")
                 .append("Replace every placeholder string and the example scores with the actual evaluation. ")
                 .append("Arrays may be empty. Do not invent evidence; mention missing evidence explicitly. ")
