@@ -72,7 +72,6 @@ public final class GeminiProvider implements LlmProvider {
         if (prompt == null || prompt.isBlank()) {
             throw new LlmException("La demande envoyée à Gemini ne doit pas être vide.");
         }
-        System.out.println("Sending prompt :" + prompt);
         String requestedModel = requireModel(selectedModel);
         GenerateContentConfig config = GenerateContentConfig.builder()
                 .responseMimeType("application/json")
@@ -93,7 +92,6 @@ public final class GeminiProvider implements LlmProvider {
         if (output == null || output.isBlank()) {
             throw new LlmException("Gemini n'a renvoyé aucune réponse textuelle exploitable.");
         }
-        System.out.println("Received output :" + output);
         return output.trim();
     }
 

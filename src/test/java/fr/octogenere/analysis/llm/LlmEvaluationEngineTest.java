@@ -115,6 +115,8 @@ class LlmEvaluationEngineTest {
     private String responseJson() {
         return """
                 {
+                  "score": 7.2,
+                  "maxScore": 10,
                   "overallSummary": "Le projet est court et lisible.",
                   "criteria": [
                     {

@@ -20,6 +20,8 @@ class EvaluationResponseParserTest {
     void validatesAndRestoresTheRequestedCriterionOrder() {
         EvaluationResponseParser.ParsedResponse response = parser.parse("""
                 {
+                  "score": 7.2,
+                  "maxScore": 10,
                   "overallSummary": "Synthèse générale.",
                   "criteria": [
                     {"criterion":"Tests","score":3,"maxScore":5,"summary":"Tests.",
