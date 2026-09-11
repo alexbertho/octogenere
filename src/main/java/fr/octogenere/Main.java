@@ -62,11 +62,10 @@ public class Main {
 
             String json = provider.ask(prompt);
 
-            System.out.println("Réponse test :" + json);
+            System.out.println("Test response :" + json);
 
         } catch (LlmException e) {
-            System.err.println("Erreur côté IA : " + e.getMessage());
+            System.err.println("Error IA side : " + e.getMessage());
         }
-        */
     }
 }
