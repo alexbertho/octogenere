@@ -1,0 +1,162 @@
+\section{Moteur d'analyse et intégration des LLM}
+\label{sec:ia}
+\subsection{Des critères chargés une seule fois}
+\code{CriterionCatalog} lit la ressource \code{analysis/criteria.json}, contrôle ses propriétés et construit une liste de \code{EvaluationCriterion}. Les identifiants et libellés doivent être uniques ; le moteur résout ensuite les libellés transmis par la vue à partir de ce catalogue. Contrairement à une lecture directe depuis les cases à cocher, cette résolution conserve une référence métier unique pour les maxima et les critères attendus.
+
+\begin{table}[H]
+\small
+\begin{tabularx}{\textwidth}{@{}YP{24mm}P{21mm}P{21mm}@{}}
+\toprule
+\tabhead{Critère configuré} & \tabhead{Activation} & \tabhead{Poids} & \tabhead{Maximum}\\
+\midrule
+Qualité de l'architecture (SOLID) & Oui & 0,25 & 10\\
+Lisibilité et qualité du code & Oui & 0,25 & 10\\
+Gestion des exceptions & Oui & 0,15 & 10\\
+Qualité de la documentation & Non & 0,15 & 10\\
+Sécurité & Oui & 0,20 & 10\\
+\bottomrule
+\end{tabularx}
+\caption{Catalogue fourni avec le prototype. Le champ de pondération est déclaré, mais n'est pas utilisé par le moteur actuel pour calculer une note globale pondérée.}
+\end{table}
+
+\subsection{Sélection et représentation du code}
+\code{XmlFileTreeBuilder} parcourt le projet sans suivre les liens symboliques rencontrés et ignore plusieurs répertoires générés. Il retient les fichiers texte compatibles avec ses règles d'extension, exclut des noms et formats sensibles courants, puis décode les contenus en UTF-8. Les candidats retenus sont ordonnés par chemin relatif pour rendre leur présentation stable.
+
+\begin{tabularx}{\textwidth}{@{}P{49mm}YP{31mm}@{}}
+\toprule
+\tabhead{Borne} & \tabhead{Objectif} & \tabhead{Valeur}\\
+\midrule
+Fichiers inclus & Limiter le contexte transmis. & 120\\
+Taille d'un fichier & Écarter les fichiers trop volumineux. & 64 Kio\\
+Cumul des contenus source & Borner les données lues et retenues. & 512 Kio\\
+Candidats découverts & Arrêter une exploration excessive. & 5\,000\\
+\bottomrule
+\end{tabularx}
+
+Les textes sont protégés par \code{PromptInjectionGuard}, puis placés dans une hiérarchie XML de dossiers et de fichiers. Ce XML est une représentation textuelle de transport : il est inséré dans le prompt envoyé au fournisseur, sans dépôt séparé ni serveur de fichiers intermédiaire. Les nombres de fichiers inclus et omis ainsi que l'indicateur de troncature sont remontés au moteur.
+
+\subsection{Compromis de gestion du contexte}
+Le prototype réalise une requête d'évaluation globale sur un sous-ensemble borné du projet. Il ne découpe pas le code en analyses multiples et n'agrège pas de synthèses intermédiaires. Ce choix limite les interactions réseau et la complexité de coordination, au prix d'une perte possible d'éléments pertinents.
+
+La limite de 512 Kio concerne les contenus source avant ajout des balises, avertissements et journaux ; elle n'est pas un budget exact de tokens. De plus, lorsque la limite de découverte est atteinte, le tri ne porte que sur les candidats déjà rencontrés. Une sélection guidée par les dépendances du projet et un budget adapté au modèle constitueraient une amélioration substantielle.
+
+\clearpage
+\suite{Moteur d'analyse — requêtes et choix du modèle}
+\subsection{Construction du prompt}
+\code{PromptBuilder} réunit un rôle de relecteur logiciel, le nom du projet, la liste des critères, une structure JSON attendue, les observations de la sandbox et le contexte XML. Les consignes demandent de juger le code contenu dans les fichiers, sans évaluer le XML comme s'il s'agissait de l'architecture réelle du projet. Les éléments de code sont annoncés comme des données non fiables.
+
+Les journaux de compilation et de test sont placés après la fermeture de l'exemple JSON, afin de ne pas en altérer la syntaxe. Leur rôle est d'apporter des indices : une commande en échec ne prouve pas, à elle seule, un défaut du code. L'environnement, les dépendances indisponibles ou les ressources autorisées peuvent expliquer l'échec.
+
+\begin{pointcle}{Un contrat de sortie à maintenir cohérent}
+Le contrat demande quatre champs à la racine : \code{score}, \code{maxScore}, \code{overallSummary} et \code{criteria}. Le prompt présente désormais cette même structure et les réponses simulées par les tests suivent ce format. Cet alignement évite qu'une réponse conforme aux instructions données au modèle soit ensuite rejetée par le validateur.
+\end{pointcle}
+
+\subsection{Fournisseur et modèle : deux niveaux distincts}
+Le fournisseur est choisi au démarrage par \code{LLM\_PROVIDER}. Les adaptateurs encapsulent les SDK Google Gen AI et OpenAI. Le prototype utilise des API distantes ; il ne livre pas encore d'adaptateur dédié à un modèle local. Ce choix réduit la mise en place initiale, mais maintient une dépendance au réseau, à la clé API et aux conditions d'accès du service.
+
+Pour Gemini, la requête demande une sortie de type \code{application/json}, avec une température de 0,2 et un plafond de 4\,096 tokens de sortie. OpenAI utilise l'API Responses avec extraction de la réponse textuelle. Le paramétrage n'est donc pas identique entre les services ; la validation applicative reste commune. Une température faible peut réduire la variabilité, sans rendre les résultats déterministes.
+
+\subsection{Découverte des modèles dans l'interface}
+Le sélecteur affiche initialement le modèle de configuration. Pour Gemini, le provider interroge \code{models.list} via le SDK, parcourt les résultats et ne conserve que les entrées annonçant l'action \code{generateContent}, documentée par Google \cite{gemini-models}. Les noms sont normalisés en retirant le préfixe \code{models/}, dédupliqués et triés.
+
+Si la liste distante est vide ou si son chargement échoue, \code{GOOGLE\_MODEL} demeure le choix de repli. Si la liste est disponible, la sélection courante est conservée lorsqu'elle y figure ; sinon, le premier modèle proposé est choisi. Le chargement s'effectue dans un exécuteur distinct, sans immobiliser l'exploration du dossier.
+
+Au lancement, la valeur choisie est copiée dans la tâche d'analyse, transmise au moteur puis à l'adaptateur. Elle est également inscrite dans le rapport métier. Pour OpenAI, la liste exposée reste limitée au modèle configuré. Enfin, la capacité \code{generateContent} ne garantit pas à elle seule la compatibilité d'un modèle avec tous les paramètres de notre requête, notamment le format JSON ; un échec demeure possible et doit être traité.
+
+\clearpage
+\section{Gestion des erreurs et restitution}
+\label{sec:erreurs}
+\subsection{Contrôler les réponses à la frontière du système}
+Le moteur n'utilise la sortie du fournisseur qu'après validation. \code{EvaluationResponseParser} refuse notamment les champs inconnus, les propriétés obligatoires manquantes, les clés dupliquées, les données supplémentaires après le JSON et les conversions implicites de types. Il vérifie que chaque critère attendu apparaît une seule fois et que son maximum correspond au catalogue.
+
+Les invariants des objets métier complètent ces contrôles : une note doit être entière et comprise entre zéro et le maximum ; les textes requis et les listes d'observations doivent respecter leur contrat. La réponse est réordonnée selon les critères demandés. Ainsi, l'interface et l'export utilisent le même résultat validé, au lieu de réinterpréter séparément une réponse brute.
+
+\begin{table}[H]
+\small
+\begin{tabularx}{\textwidth}{@{}P{37mm}YP{45mm}@{}}
+\toprule
+\tabhead{Situation} & \tabhead{Traitement} & \tabhead{Conséquence visible}\\
+\midrule
+Configuration absente & Initialisation d'un moteur indisponible avec message explicatif. & Fenêtre accessible ; analyse refusée avec erreur.\\
+Authentification, quota ou panne réseau & Traduction des exceptions du SDK en message métier. & Message d'erreur IA et possibilité de relancer.\\
+Liste de modèles vide ou inaccessible & Conservation du modèle de configuration. & Avertissement et sélecteur utilisable.\\
+Réponse vide, incomplète ou non conforme & Rejet par l'adaptateur ou le parseur. & Aucun nouveau résultat exportable.\\
+SandboxException & Poursuite avec mention d'une analyse statique uniquement. & Avertissement dans les journaux.\\
+Échec d'écriture du document & Propagation vers le contrôleur. & Erreur d'export, sans message de succès.\\
+\bottomrule
+\end{tabularx}
+\caption{Politique de traitement des principaux échecs.}
+\end{table}
+
+\subsection{Résilience et traçabilité}
+Les contrôles sont réactivés après un échec afin de permettre une nouvelle tentative de l'utilisateur. La configuration applique un délai de 60 secondes pour Gemini et de 30 secondes pour OpenAI ; l'adaptateur OpenAI désactive les tentatives automatiques du SDK. Aucun mécanisme applicatif de reprise partielle, de temporisation exponentielle ou de bascule automatique vers un autre fournisseur n'est implémenté.
+
+Les messages du moteur indiquent la préparation, les fichiers retenus, les omissions, le fournisseur, le modèle et les étapes de validation. Les erreurs SDK sont traduites sans afficher leur corps privé. Ces journaux sont destinés à la session courante ; ils ne constituent pas encore une trace persistante avec empreinte du contexte, identifiant de requête et durée de toutes les étapes.
+
+\subsection{Production du compte rendu LaTeX}
+\code{GenerateReportUseCase} reçoit le rapport métier validé et délègue à \code{ReportGenerator}. Son implémentation LaTeX applique un modèle documentaire et échappe les caractères réservés. Le LLM fournit des observations, tandis que l'application conserve la structure du document. Chaque export crée un sous-dossier de \code{target/reports}, contenant le fichier \code{rapport-evaluation.tex} et le logo. La compilation PDF de cette évaluation est une étape distincte ; elle n'est pas automatisée par le bouton d'export actuel.
+
+\clearpage
+\section{Sécurité et exécution isolée}
+\label{sec:securite}
+\subsection{Deux frontières de confiance}
+Le sujet impose de considérer le projet importé comme potentiellement malveillant \cite{sujet}. Deux risques doivent être séparés : l'exécution de code susceptible d'affecter la machine, et l'introduction de consignes malveillantes dans les données lues par le LLM. Docker réduit l'exposition liée à l'exécution ; la préparation du prompt et la validation réduisent certains risques liés à l'interprétation. Aucun de ces mécanismes ne constitue une protection universelle.
+
+\begin{figure}[H]
+\centering
+\begin{tikzpicture}
+\node[box,text width=13.7cm,minimum height=5.8cm,fill=white] (vm) at (0,0) {};
+\node[font=\sffamily\bfseries,text=navy,anchor=north west] at (-6.9,2.75) {Machine virtuelle dédiée — environnement prescrit par le sujet};
+\node[box,text width=4.2cm] (app) at (-4,0.8) {Application OctoGenere\\\footnotesize Moteur et SandboxService};
+\node[darkbox,text width=4.8cm,minimum height=1.5cm] (docker) at (3.0,0.8) {Conteneur Docker jetable\\\footnotesize Utilisateur non privilégié\\Commande de compilation / test};
+\node[box,text width=4.2cm] (input) at (-4,-1.25) {Projet sélectionné\\\footnotesize Montage /input en lecture seule};
+\node[box,text width=4.8cm] (work) at (3,-1.25) {\textbf{/workspace}\\\footnotesize Copie du projet · tmpfs\\Écritures limitées};
+\draw[flow] (app.east) -- node[tag,above]{docker run} (docker.west);
+\draw[flow] (input.east) -- node[tag,above]{copie} (work.west);
+\draw[flow] (work.north) -- (docker.south);
+\end{tikzpicture}
+\caption{Déploiement attendu pour l'exécution de projets non fiables. Les restrictions Docker sont codées ; la présence et le provisionnement de la machine virtuelle ne sont pas automatisés par le projet.}
+\label{fig:securite}
+\end{figure}
+
+\subsection{Restrictions effectivement construites}
+\code{DockerCommandBuilder} prépare les arguments de lancement sous forme de liste, sans concaténation d'une commande interprétée par un shell de l'hôte. Il applique un utilisateur non privilégié, un système de fichiers racine en lecture seule, la suppression des capacités et l'interdiction d'acquérir de nouveaux privilèges. Le projet est monté en lecture seule, puis copié vers un espace de travail temporaire.
+
+\begin{tabularx}{\textwidth}{@{}P{40mm}YP{35mm}@{}}
+\toprule
+\tabhead{Ressource / accès} & \tabhead{Valeur par défaut} & \tabhead{Intention}\\
+\midrule
+CPU ; mémoire & 1 CPU ; 512 Mio & Contenir la consommation.\\
+Processus ; durée & 128 processus ; 120 secondes & Limiter prolifération et blocage.\\
+Réseau & Désactivé & Réduire les communications sortantes.\\
+Espace de travail & tmpfs de 256 Mio ; /tmp de 64 Mio & Limiter les écritures temporaires.\\
+Compte du conteneur & UID / GID 10001 & Éviter une exécution en root.\\
+\bottomrule
+\end{tabularx}
+
+\smallskip
+La documentation Docker souligne l'importance de définir explicitement des limites de ressources \cite{docker}. Leur présence dans les arguments peut être vérifiée sans exécuter de projet inconnu ; leur efficacité réelle doit aussi être éprouvée dans l'environnement de déploiement.
+
+\clearpage
+\suite{Sécurité — garanties et limites}
+\subsection{Cycle de vie de la sandbox}
+Chaque exécution reçoit un nom de conteneur distinct. L'exécuteur lit séparément les flux standard et d'erreur et ajoute un délai de surveillance Java au délai interne du conteneur. Un nettoyage est tenté dans un bloc \code{finally}, en complément de l'option de suppression automatique de Docker. Cette tentative peut échouer : elle ne doit pas être présentée comme une garantie absolue d'absence de processus résiduel.
+
+Le retour inclut le code de sortie, les sorties textuelles, une durée et l'indication de dépassement de délai. Le code 137 est traité comme un arrêt forcé ; il ne distingue pas à lui seul une limite mémoire d'un dépassement de durée. La version du moteur utilise principalement les sorties et le code de retour pour construire le prompt.
+
+\subsection{Réduire les injections de prompt}
+\code{PromptInjectionGuard} combine un scanner heuristique de consignes suspectes et un mécanisme de nettoyage et de délimitation. Ce dernier retire certains caractères invisibles, encadre les fichiers par des marqueurs explicites et neutralise les occurrences de ces marqueurs dans le contenu. Le texte suspect est conservé comme objet d'analyse et signalé, plutôt que silencieusement supprimé.
+
+Cette stratégie donne au modèle des indications sur l'origine et le statut du contenu. Elle reste heuristique : une instruction peut être obfusquée ou reformulée, et le respect des consignes par un LLM n'est pas garanti. La validation de sortie reste indispensable, tout en étant incapable de reconnaître à elle seule une appréciation biaisée mais formellement valide.
+
+\subsection{Confidentialité et surfaces restantes}
+Le filtre de fichiers exclut notamment \code{.env}, plusieurs noms de fichiers d'identifiants et des extensions de clés. Il s'agit d'une protection par catégories, et non d'un détecteur exhaustif de secrets : des identifiants inscrits dans un fichier source ou dans \code{.env.example}, autorisé comme exemple de configuration, peuvent encore être transmis. Le contenu retenu quitte l'application lors d'un appel à une API distante.
+
+Les journaux de sandbox constituent une autre entrée non fiable. Dans cette version, ils sont ajoutés au prompt sans réutiliser la protection appliquée aux fichiers source. Leur collecte n'impose pas non plus de plafond explicite sur les flux lus dans la mémoire Java. Un projet très bavard peut donc accroître le volume du prompt ou la consommation de mémoire hors du conteneur. Une limite de collecte, un filtrage des secrets et un encadrement équivalent à celui des fichiers sont nécessaires pour durcir cette frontière.
+
+\subsection{Conditions d'exécution et limites expérimentales}
+Le réseau désactivé empêche Maven de télécharger des dépendances absentes de l'image. Un échec de compilation peut donc résulter du confinement. Le prototype ne provisionne pas automatiquement un cache de dépendances validé, ni une machine virtuelle dédiée. Cette dernière reste une condition de déploiement à mettre en place pour respecter le scénario prescrit par le sujet.
+
+En cas de \code{SandboxException}, l'application poursuit la lecture statique sans exécuter la commande sur l'hôte. D'autres défaillances Docker peuvent être retournées comme un code non nul : il reste à distinguer explicitement indisponibilité d'infrastructure et échec des tests du projet. Enfin, aucune campagne d'attaque dans une machine virtuelle n'est attestée par les tests standard présentés dans ce rapport.
+
+\clearpage

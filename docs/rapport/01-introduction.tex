@@ -1,0 +1,111 @@
+\section*{Résumé}
+\addcontentsline{toc}{section}{Résumé}
+L'analyse d'un projet logiciel par un grand modèle de langage soulève des questions qui dépassent la simple formulation d'une requête : sélection du code pertinent, dépendance à un fournisseur, fiabilité des réponses, sécurité de l'exécution et restitution des résultats. OctoGenere répond à ces enjeux par une application Java organisée autour de contrats explicites entre ses composants.
+
+Le prototype permet de sélectionner un répertoire local, d'en explorer l'arborescence, de choisir des critères et un modèle, puis d'obtenir une évaluation structurée. Une interface JavaFX pilote un moteur d'analyse indépendant de la présentation. Le code retenu est représenté dans un contexte XML borné ; les observations issues d'une sandbox Docker, lorsqu'elles sont disponibles, enrichissent le prompt. Les adaptateurs Gemini et OpenAI masquent les particularités des SDK. La réponse est validée avant toute restitution et peut être exportée dans un document LaTeX construit par l'application.
+
+Le travail porte principalement sur la séparation des responsabilités et la justification des patrons de conception. Adapter, Strategy, Observer, Facade et Builder répondent à des problèmes identifiés ; une fabrique simple centralise la création des fournisseurs. Les critères sont décrits comme des données de configuration, ce qui évite d'introduire une classe par élément de notation.
+
+La validation repose sur des tests de composants et des services simulés. La dernière exécution standard de Maven a recensé 109 tests, dont 104 réussis et 5 tests graphiques non exécutés. Ce résultat valide des comportements logiciels ; il ne mesure ni la pertinence pédagogique des notes attribuées par un LLM, ni la résistance complète de l'environnement d'exécution.
+
+\begin{pointcle}{Contribution principale}
+Une chaîne d'analyse dont les frontières sont explicites : le moteur orchestre, les adaptateurs communiquent, la sandbox exécute, le validateur contrôle et l'interface restitue. Le modèle de langage apporte une appréciation, sans recevoir la responsabilité de piloter l'exécution locale.
+\end{pointcle}
+
+\textbf{Mots-clés :} architecture logicielle ; MVC ; patrons de conception ; JavaFX ; modèles de langage ; Docker ; validation.
+
+\subsection*{Périmètre documentaire}
+Ce rapport reprend le brouillon du groupe et décrit l'implémentation de la branche \code{dev} au commit \code{56e7ae8}, datée du 11 septembre 2026. Les intentions de conception sont distinguées des mécanismes effectivement présents. Les diagrammes représentent cette version du code ; les évolutions proposées sont annoncées comme telles.
+
+\subsection*{Conventions de lecture}
+\begin{tabularx}{\textwidth}{@{}P{23mm}Y@{}}
+\toprule
+\tabhead{Terme} & \tabhead{Signification dans le rapport}\\
+\midrule
+LLM & Grand modèle de langage utilisé pour apprécier le code.\\
+Fournisseur & Service et SDK donnant accès à un ou plusieurs modèles.\\
+Contexte & Ensemble des fichiers retenus et des informations jointes au prompt.\\
+Sandbox & Environnement Docker réservé à l'exécution du projet analysé.\\
+Rapport & Selon le contexte, le présent mémoire ou l'évaluation exportée par l'application.\\
+\bottomrule
+\end{tabularx}
+
+\clearpage
+\tableofcontents
+\vfill
+\begin{pointcle}{Organisation du document}
+La présentation suit les décisions de conception : besoin et organisation du travail, architecture et patrons, fonctionnement du moteur, sécurité, validation et perspectives. La transformation JSON--LaTeX est traitée de manière synthétique ; les enjeux d'architecture et d'intégration occupent l'essentiel du rapport.
+\end{pointcle}
+\clearpage
+
+\section{Problématique et périmètre fonctionnel}
+\label{sec:besoin}
+\subsection{Contexte et objectifs}
+Le sujet \emph{AI Project Reviewer} demande de concevoir une plateforme d'évaluation de projets logiciels combinant analyses automatiques, recours à un LLM et production d'un rapport \cite{sujet}. L'enjeu pédagogique est de construire une architecture extensible et explicable, tout en traitant le projet importé et les réponses du service externe comme des entrées non fiables.
+
+Notre problématique est la suivante : \emph{comment intégrer une évaluation probabiliste dans une application dont les comportements, les dépendances et les frontières de confiance restent maîtrisés ?} La réponse repose sur une séparation entre les opérations déterministes de préparation et de contrôle, et l'interprétation qualitative confiée au modèle. Un JSON conforme prouve que les résultats sont exploitables par l'application ; il ne prouve pas que leur contenu est exact.
+
+\subsection{Parcours utilisateur réalisé}
+L'utilisateur choisit un dossier local, consulte son arborescence et sélectionne les critères proposés. Il choisit ensuite un modèle du fournisseur configuré, lance l'analyse et suit sa progression dans l'interface. Après validation de la réponse, les scores et la synthèse sont affichés ; un bouton permet de produire un document LaTeX. Une modification du projet ou des paramètres par l'utilisateur invalide les résultats précédents afin d'éviter leur réutilisation involontaire.
+
+\begin{table}[H]
+\small
+\begin{tabularx}{\textwidth}{@{}P{37mm}YP{24mm}@{}}
+\toprule
+\tabhead{Besoin} & \tabhead{Réponse du prototype} & \tabhead{État}\\
+\midrule
+Importer et explorer & Répertoire local et arbre de fichiers borné. & Réalisé\\
+Configurer l'évaluation & Catalogue de critères et sélection du modèle. & Réalisé\\
+Interroger un LLM & Adaptateurs Gemini et OpenAI ; un fournisseur par configuration. & Réalisé\\
+Suivre et contrôler & Tâches asynchrones, progression et erreurs visibles. & Réalisé\\
+Exécuter le projet & Commande Maven dans un conteneur dédié, si l'environnement le permet. & Conditionnel\\
+Restituer & Résultats validés et export LaTeX dans un dossier distinct. & Réalisé\\
+Importer une archive ; conserver un historique & Pas d'import d'archive ni de service de consultation des analyses passées. & À développer\\
+\bottomrule
+\end{tabularx}
+\caption{Couverture fonctionnelle de la version étudiée.}
+\end{table}
+
+\subsection{Exigences transversales}
+Trois propriétés orientent la conception : \textbf{testabilité}, afin de remplacer les services externes par des doubles contrôlés ; \textbf{réactivité}, afin que les appels réseau et les accès disque n'immobilisent pas JavaFX ; \textbf{maîtrise des entrées}, afin de limiter le volume de code transmis et de rejeter une réponse incohérente. L'extensibilité est appréciée au nombre de composants qu'il faut modifier pour introduire une capacité nouvelle, et non au nombre de patterns employés.
+
+\clearpage
+\section{Méthodologie et choix techniques}
+\label{sec:methode}
+\subsection{Organisation du travail collectif}
+Le groupe a travaillé sur une période courte de deux jours. Le brouillon décrit une démarche itérative inspirée de l'agilité : identification des tâches sous forme d'issues, répartition du travail et échanges de conception. Il serait excessif de la présenter comme une application complète de Scrum ; les échanges ont surtout permis d'ajuster les contrats entre modules et de résoudre les difficultés d'intégration.
+
+Le dépôt distingue \code{dev}, branche d'intégration, de \code{main}, destinée aux versions validées. Des branches de travail ont permis aux sous-groupes d'avancer sur l'IA, l'interface et la sécurité. L'intégration a notamment consisté à relier des composants d'abord développés séparément : construction du contexte, interrogation du LLM, validation et affichage. L'ajout du sélecteur de modèles illustre cette démarche : son comportement visuel a été complété par la découverte des modèles et la transmission de la sélection au fournisseur.
+
+\begin{table}[H]
+\small
+\begin{tabularx}{\textwidth}{@{}P{32mm}YP{46mm}@{}}
+\toprule
+\tabhead{Pôle} & \tabhead{Membres} & \tabhead{Responsabilité collective}\\
+\midrule
+Intelligence artificielle & Mathéo Darnaudguilhem, Reese Dode, Alice Durand & Contexte du projet, prompt et échanges avec les modèles.\\
+Interface JavaFX & Alexia Gastaud & Composants graphiques et parcours utilisateur.\\
+Architecture et intégration & Alexandre Bertho, Louis Ciebiera, Gilles Conrad, Sébastien Lallement & Contrats, articulation des modules, sécurité, restitution et validation.\\
+\bottomrule
+\end{tabularx}
+\caption{Répartition des pôles, d'après le README du groupe. Les travaux d'intégration sont transversaux.}
+\end{table}
+
+\subsection{Choix de réalisation}
+\begin{tabularx}{\textwidth}{@{}P{35mm}Y@{}}
+\toprule
+\tabhead{Technologie} & \tabhead{Justification}\\
+\midrule
+Java 21 et Maven & Typage des contrats, objets de données immuables et construction commune à l'ensemble du groupe.\\
+JavaFX 21 & Arborescence, contrôles de sélection, tâches asynchrones et mise en forme CSS dans l'écosystème Java.\\
+SDK Gemini / OpenAI & Encapsulation des protocoles API dans des adaptateurs dédiés.\\
+Jackson & Lecture de la configuration et désérialisation contrôlée des résultats.\\
+Docker & Exécution de commandes dans un environnement jetable, avec restrictions explicites.\\
+LaTeX et JUnit 5 & Production documentaire structurée et validation automatisée des composants.\\
+\bottomrule
+\end{tabularx}
+
+\subsection{Enseignement méthodologique}
+La difficulté principale a été de faire converger les hypothèses locales. Un menu peut être opérationnel visuellement sans modifier la requête réelle ; un prompt peut être lisible tout en contredisant le validateur. Les tests d'intégration et la relecture des contrats sont donc complémentaires des développements par sous-groupe. Les noms de classes et les schémas du présent rapport ont été rapprochés du code livré pour rendre ces décisions vérifiables.
+
+\clearpage

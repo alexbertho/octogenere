@@ -1,0 +1,136 @@
+% Compilation depuis la racine :
+% latexmk -xelatex -interaction=nonstopmode -halt-on-error -outdir=target/rapport Rapport-OctoGenere.tex
+\documentclass[11pt,a4paper]{article}
+\providecommand{\reportdir}{docs/rapport}
+\usepackage{fontspec}
+\setmainfont{TeX Gyre Pagella}
+\setsansfont{TeX Gyre Heros}
+\setmonofont[Scale=0.83]{Latin Modern Mono}
+\usepackage[french]{babel}
+\usepackage[a4paper,top=22mm,bottom=23mm,left=23mm,right=23mm,headheight=16pt,headsep=8mm,footskip=11mm]{geometry}
+\usepackage{microtype}
+\usepackage[table]{xcolor}
+\definecolor{navy}{HTML}{17354B}
+\definecolor{accent}{HTML}{0086A8}
+\definecolor{ink}{HTML}{243440}
+\definecolor{muted}{HTML}{607580}
+\definecolor{pale}{HTML}{F0F6F8}
+\definecolor{line}{HTML}{CDDEE5}
+\usepackage{graphicx}
+\usepackage{booktabs,tabularx,array}
+\usepackage{enumitem}
+\usepackage{titlesec}
+\usepackage{fancyhdr}
+\usepackage{lastpage}
+\usepackage{caption}
+\usepackage{float}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,fit,backgrounds,calc,shapes.geometric}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{needspace}
+\usepackage{xurl}
+\usepackage{hyperref}
+\hypersetup{colorlinks=true,linkcolor=navy,urlcolor=accent,citecolor=accent,
+  pdftitle={OctoGenere -- Rapport de projet},
+  pdfauthor={Groupe 3 -- Master 1 Informatique -- Université Côte d'Azur},
+  pdfsubject={SMUFN129 -- Software Engineering et Design Patterns},
+  pdfkeywords={architecture logicielle, MVC, design patterns, Java, LLM, Docker},
+  bookmarksnumbered=true,pdfdisplaydoctitle=true}
+\usepackage{bookmark}
+\color{ink}
+\linespread{1.02}
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{4.5pt plus 1pt minus 1pt}
+\setlength{\emergencystretch}{2em}
+\setlength{\tabcolsep}{5.5pt}
+\renewcommand{\arraystretch}{1.12}
+\setcounter{tocdepth}{1}
+\setcounter{secnumdepth}{2}
+\setlist[itemize]{leftmargin=1.35em,itemsep=2pt,topsep=4pt,label=\textcolor{accent}{\textbullet}}
+\setlist[enumerate]{leftmargin=1.7em,itemsep=3pt,topsep=4pt}
+\newcolumntype{Y}{>{\raggedright\arraybackslash}X}
+\newcolumntype{P}[1]{>{\raggedright\arraybackslash}p{#1}}
+\titleformat{\section}{\sffamily\Large\bfseries\color{navy}}{\textcolor{accent}{\thesection}}{0.7em}{}
+\titleformat{\subsection}{\sffamily\normalsize\bfseries\color{navy}}{\thesubsection}{0.6em}{}
+\titlespacing*{\section}{0pt}{0pt}{12pt}
+\titlespacing*{\subsection}{0pt}{11pt}{5pt}
+\captionsetup{font=small,labelfont={bf,sf},textfont=it,skip=7pt}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\sffamily\scriptsize\bfseries\textcolor{navy}{OCTOGENERE}}
+\fancyhead[R]{\sffamily\scriptsize\textcolor{muted}{Rapport de projet\enspace /\enspace Groupe 3}}
+\fancyfoot[L]{\sffamily\scriptsize\textcolor{muted}{Master 1 Informatique\enspace ·\enspace Université Côte d'Azur}}
+\fancyfoot[R]{\sffamily\scriptsize\textcolor{navy}{\thepage\, /\,\pageref*{LastPage}}}
+\renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\footrulewidth}{0pt}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[R]{\sffamily\scriptsize\thepage}\renewcommand{\headrulewidth}{0pt}}
+\newtcolorbox{pointcle}[1]{enhanced,colback=pale,colframe=line,boxrule=0pt,
+  borderline west={2pt}{0pt}{accent},arc=0pt,left=11pt,right=11pt,top=8pt,bottom=8pt,
+  title={#1},coltitle=navy,fonttitle=\sffamily\bfseries,attach title to upper={\par\smallskip},
+  before skip=9pt,after skip=9pt}
+\newcommand{\code}[1]{\texttt{#1}}
+\newcommand{\sourcecode}[1]{{\footnotesize\color{muted}Repères dans le code : #1.\par}}
+\newcommand{\suite}[1]{\noindent{\sffamily\small\bfseries\color{accent}#1}\par\vspace{5pt}}
+\newcommand{\tabhead}[1]{\textbf{\sffamily\color{navy}#1}}
+\lstset{basicstyle=\ttfamily\small,backgroundcolor=\color{pale},frame=single,
+  rulecolor=\color{line},framerule=0.3pt,framesep=6pt,breaklines=true,
+  columns=fullflexible,keepspaces=true,showstringspaces=false,aboveskip=6pt,belowskip=6pt}
+\tikzset{box/.style={draw=line,fill=pale,rounded corners=2pt,align=center,
+    font=\sffamily\small,inner sep=8pt,text=navy},
+  darkbox/.style={box,draw=navy,fill=navy,text=white},
+  flow/.style={-{Latex[length=2mm]},draw=accent,line width=0.8pt},
+  backflow/.style={flow,dashed,draw=muted},
+  tag/.style={font=\sffamily\scriptsize,text=muted,fill=white,inner sep=2pt}}
+
+\begin{document}
+\hypersetup{pageanchor=false}
+\begin{titlepage}
+\thispagestyle{empty}
+\noindent\includegraphics[width=\textwidth]{\reportdir/assets/ds4h-uca-france2030.png}
+\vspace{14mm}
+
+{\sffamily\small\bfseries\color{accent}MASTER 1 INFORMATIQUE\enspace /\enspace GROUPE 3\par}
+\vspace{5mm}
+{\sffamily\fontsize{43}{48}\selectfont\bfseries\color{navy}OctoGenere\par}
+\vspace{4mm}
+{\sffamily\fontsize{19}{24}\selectfont\color{navy}Conception d'une plateforme\\d'évaluation de projets logiciels\\assistée par un modèle de langage\par}
+\vspace{8mm}
+{\color{accent}\rule{32mm}{1.6pt}}\par
+\vspace{6mm}
+{\sffamily\large\bfseries Rapport de projet\par}
+{\sffamily\normalsize SMUFN129 — Software Engineering \& Design Patterns\par}
+\vspace{6mm}
+\begin{minipage}{0.92\textwidth}
+\color{muted}Architecture modulaire, intégration des fournisseurs LLM,\newline
+exécution isolée et validation des résultats.
+\end{minipage}
+\vfill
+{\sffamily\small\bfseries\color{navy}ÉQUIPE PROJET\par}
+\vspace{3mm}
+{\small
+\begin{tabularx}{\textwidth}{@{}YP{30mm}@{}}
+\toprule
+\tabhead{Membre} & \tabhead{Numéro étudiant}\\
+\midrule
+Alexandre \textsc{Bertho} & 22204437\\
+Louis \textsc{Ciebiera} & 22205090\\
+Gilles \textsc{Conrad} & 22607490\\
+Reese \textsc{Dode} & 22302249\\
+Mathéo \textsc{Darnaudguilhem} & 22316680\\
+Alice \textsc{Durand} & 22401928\\
+Alexia \textsc{Gastaud} & 22307655\\
+Sébastien \textsc{Lallement} & 22205593\\
+\bottomrule
+\end{tabularx}}\par
+\vspace{5mm}
+{\sffamily\small\color{muted}Année universitaire 2026–2027\hfill 11 septembre 2026\par}
+\end{titlepage}
+\setcounter{page}{2}
+\hypersetup{pageanchor=true}
+
+\input{\reportdir/01-introduction.tex}
+\input{\reportdir/02-architecture.tex}
+\input{\reportdir/03-analyse.tex}
+\input{\reportdir/04-validation.tex}
+\end{document}

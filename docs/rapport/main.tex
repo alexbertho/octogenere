@@ -1,17 +1,5 @@
-% Depuis ce dossier : latexmk -pdf -outdir=build main.tex
-\documentclass[12pt,a4paper]{article}
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
-\usepackage[french]{babel}
-
-\title{OctoGenere\\Rapport de projet\\Software Engineering \& Design pattern}
-\author{Groupe de 8 -- M1}
-\date{Année universitaire 2026--2027}
-
-\begin{document}
-\maketitle
-
-Ce rapport présentera la conception et la réalisation de notre application
-d'évaluation de projets logiciels assistée par un modèle de langage.
-
-\end{document}
+% Point d'entrée compatible avec une compilation depuis docs/rapport :
+% latexmk -xelatex -outdir=build main.tex
+% La source canonique est Rapport-OctoGenere.tex, à la racine du dépôt.
+\def\reportdir{.}
+\input{../../Rapport-OctoGenere.tex}
