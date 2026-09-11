@@ -1,11 +1,9 @@
 package fr.octogenere.ui.components;
 
 import javafx.geometry.Insets;
-import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
-import javafx.scene.control.Label;
-import javafx.scene.control.ProgressBar;
-import javafx.scene.control.Separator;
+import javafx.scene.control.*;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import fr.octogenere.ui.controller.UIController;
 import fr.octogenere.analysis.config.CriterionCatalog;
@@ -26,6 +24,7 @@ public class AnalysisConfigPanel extends VBox {
     private ProgressBar progressBar;
     private Label statusLabel;
     private Button startBtn;
+    private ComboBox<String> modelSelector;
 
     /**
      * Constructeur du panneau de configuration.
@@ -60,6 +59,27 @@ public class AnalysisConfigPanel extends VBox {
             addCriterion(criteriaContainer, criterion.label(), criterion.enabled());
         }
 
+        // Menu déroulant pour choisir le modèle d'IA
+        VBox modelContainer = new VBox(5);
+        Label modelLabel = new Label("Modèle d'IA :");
+        modelLabel.getStyleClass().add("title");
+
+        modelSelector = new ComboBox<>();
+        modelSelector.getStyleClass().add("combo-box");
+        // TODO:  Ajouter ici les modèles
+        modelSelector.getItems().addAll("gpt-4o-mini", "gpt-4o", "claude-3-5-sonnet");
+        modelSelector.getSelectionModel().selectFirst();
+        modelSelector.getStyleClass().add("combo-box");
+
+        // Prévenir le contrôleur si on change de modèle
+        modelSelector.setOnAction(e -> controller.onConfigurationChanged());
+        modelContainer.getChildren().addAll(modelLabel, modelSelector);
+
+        // Assemblage horizontal
+        HBox topSection = new HBox(20);
+        HBox.setHgrow(criteriaContainer, Priority.ALWAYS);
+        topSection.getChildren().addAll(criteriaContainer, modelContainer);
+
         // Bouton de lancement
         startBtn = new Button("LANCER L'ANALYSE");
         startBtn.setId("start-analysis");
@@ -77,7 +97,7 @@ public class AnalysisConfigPanel extends VBox {
 
         // Ajout de tous les composants au conteneur principal
         this.getChildren().addAll(
-                title, modeNotice, criteriaContainer, new Separator(),
+                title, modeNotice, topSection, new Separator(),
                 startBtn, new Separator(),
                 progTitle, progressBar, statusLabel
         );
@@ -129,6 +149,7 @@ public class AnalysisConfigPanel extends VBox {
      */
     public void setBusy(boolean busy) {
         startBtn.setDisable(busy);
+        modelSelector.setDisable(busy);
         for (CheckBox checkBox : criteriaBoxes) {
             checkBox.setDisable(busy);
         }

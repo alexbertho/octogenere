@@ -1,5 +1,12 @@
 package fr.octogenere.analysis.llm;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Objects;
+
 import fr.octogenere.analysis.AnalysisObserver;
 import fr.octogenere.analysis.EvaluationEngine;
 import fr.octogenere.analysis.config.CriterionCatalog;
@@ -10,14 +17,10 @@ import fr.octogenere.prompt.PromptBuilder;
 import fr.octogenere.prompt.xml.ProjectContext;
 import fr.octogenere.prompt.xml.XmlFileTreeBuilder;
 
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.time.LocalDate;
-import java.util.List;
-import java.util.Objects;
-
-/** Pipeline d'analyse réelle : projet, prompt, provider, validation puis rapport métier. */
+/**
+ * Pipeline d'analyse réelle : projet, prompt, provider, validation puis rapport
+ * métier.
+ */
 public final class LlmEvaluationEngine implements EvaluationEngine {
     private final LlmProvider provider;
     private final CriterionCatalog criterionCatalog;
@@ -31,8 +34,8 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
     }
 
     LlmEvaluationEngine(LlmProvider provider, CriterionCatalog criterionCatalog,
-                        XmlFileTreeBuilder contextBuilder, PromptBuilder promptBuilder,
-                        EvaluationResponseParser responseParser) {
+            XmlFileTreeBuilder contextBuilder, PromptBuilder promptBuilder,
+            EvaluationResponseParser responseParser) {
         this.provider = Objects.requireNonNull(provider);
         this.criterionCatalog = Objects.requireNonNull(criterionCatalog);
         this.contextBuilder = Objects.requireNonNull(contextBuilder);
@@ -42,7 +45,7 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
 
     @Override
     public EvaluationReport analyze(Path projectDirectory, List<String> criteria,
-                                    AnalysisObserver observer) throws IOException {
+            AnalysisObserver observer) throws IOException {
         if (projectDirectory == null || !Files.isDirectory(projectDirectory)) {
             throw new IllegalArgumentException("Sélectionne un dossier de projet existant.");
         }
@@ -67,7 +70,18 @@ public final class LlmEvaluationEngine implements EvaluationEngine {
         }
 
         checkInterrupted();
-        String prompt = promptBuilder.buildReviewPrompt(projectName, selectedCriteria, context);
+        //String prompt = promptBuilder.buildReviewPrompt(projectName, selectedCriteria, context);
+        checkInterrupted();
+        
+        observer.onProgressUpdate(0.35, "Execution of tests in the sandbox");
+        observer.onNewLogAdded("[INFO] Start compil and test in sandbox");
+        
+        fr.octogenere.security.sandbox.SandboxService sandbox = fr.octogenere.security.sandbox.SandboxService.createDefault();
+        fr.octogenere.security.sandbox.SandboxResult sandboxResult = sandbox.run(project, java.util.List.of("mvn", "-q", "clean", "test"));
+        String sandboxLogs = "exit standard :\n" + sandboxResult.stdout() + "\nErrors :\n" + sandboxResult.stderr();
+        
+        String prompt = promptBuilder.buildReviewPrompt(projectName, selectedCriteria, context, sandboxLogs);
+
         observer.onProgressUpdate(0.40, "Prompt d'analyse prêt.");
         observer.onNewLogAdded("[INFO] Appel de " + provider.providerName()
                 + " avec le modèle " + provider.modelName() + ".");
