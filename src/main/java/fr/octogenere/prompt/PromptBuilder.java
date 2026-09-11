@@ -66,6 +66,7 @@ public final class PromptBuilder {
                 .append("--- PROJECT XML START ---\n")
                 .append(context.xml())
                 .append("\n--- PROJECT XML END ---\n");
+        //System.out.println(prompt.toString());
         return prompt.toString();
     }
 
