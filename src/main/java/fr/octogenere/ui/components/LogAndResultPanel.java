@@ -14,11 +14,15 @@ public class LogAndResultPanel extends VBox {
     private Button generateReportBtn;
 
     public LogAndResultPanel(UIController controller) {
-        this.controller = controller;
-        setupUI();
+        this(controller, "Sélectionne un projet puis lance l'analyse.\n");
     }
 
-    private void setupUI() {
+    public LogAndResultPanel(UIController controller, String initialMessage) {
+        this.controller = controller;
+        setupUI(initialMessage);
+    }
+
+    private void setupUI(String initialMessage) {
         this.setSpacing(10);
         this.setPadding(new Insets(10));
 
@@ -29,7 +33,7 @@ public class LogAndResultPanel extends VBox {
         logArea.setId("analysis-log");
         logArea.setEditable(false);
         logArea.setPrefRowCount(5);
-        logArea.setText("Démonstration : les scores seront fictifs. Aucun appel API.\n");
+        logArea.setText(initialMessage.endsWith("\n") ? initialMessage : initialMessage + "\n");
         logArea.getStyleClass().add("log-area");
 
         // Bouton de génération du rapport

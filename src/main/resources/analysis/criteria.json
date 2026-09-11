@@ -1,0 +1,32 @@
+{
+  "architecture": {
+    "label": "Qualité de l'Architecture (SOLID)",
+    "enabled": true,
+    "weight": 0.25,
+    "maxScore": 10
+  },
+  "code_quality": {
+    "label": "Lisibilité et Qualité du code",
+    "enabled": true,
+    "weight": 0.25,
+    "maxScore": 10
+  },
+  "exceptions": {
+    "label": "Gestion des exceptions",
+    "enabled": true,
+    "weight": 0.15,
+    "maxScore": 10
+  },
+  "documentation": {
+    "label": "Qualité de la documentation",
+    "enabled": false,
+    "weight": 0.15,
+    "maxScore": 10
+  },
+  "security": {
+    "label": "Sécurité",
+    "enabled": true,
+    "weight": 0.20,
+    "maxScore": 10
+  }
+}

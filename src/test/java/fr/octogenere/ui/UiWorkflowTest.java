@@ -4,6 +4,7 @@ import fr.octogenere.analysis.EvaluationEngine;
 import fr.octogenere.analysis.demo.DemoEvaluationEngine;
 import fr.octogenere.analysis.llm.CriterionResultParser;
 import fr.octogenere.application.report.GenerateReportUseCase;
+import fr.octogenere.llm.LlmException;
 import fr.octogenere.project.ProjectExplorerService;
 import fr.octogenere.report.latex.LatexReportGenerator;
 import fr.octogenere.ui.components.AnalysisConfigPanel;
@@ -160,6 +161,27 @@ class UiWorkflowTest {
     }
 
     @Test
+    void llmFailureIsIdentifiedInTheInterfaceAndAllowsRetry() throws Exception {
+        openWindow((project, criteria, observer) -> {
+            throw new LlmException("Quota Gemini atteint (HTTP 429).");
+        }, directory.resolve("reports"));
+        onFx(() -> {
+            controller.onProjectSelected(directory.toFile());
+            return null;
+        });
+        awaitFx(() -> !button("start-analysis").isDisabled());
+        onFx(() -> {
+            button("start-analysis").fire();
+            return null;
+        });
+        awaitFx(() -> log().getText().contains("[ERREUR IA]"));
+
+        assertTrue(onFx(() -> log().getText().contains("HTTP 429")));
+        assertFalse(onFx(() -> button("start-analysis").isDisabled()));
+        assertTrue(onFx(() -> button("generate-report").isDisabled()));
+    }
+
+    @Test
     void exportFailureIsVisibleAndAllowsRetry() throws Exception {
         Path blockedOutput = Files.writeString(directory.resolve("not-a-directory"), "keep");
         openWindow(new DemoEvaluationEngine(), blockedOutput);
@@ -191,7 +213,7 @@ class UiWorkflowTest {
             try {
                 application.start(stage);
                 assertTrue(stage.isShowing());
-                assertTrue(stage.getTitle().contains("Démonstration"));
+            assertTrue(stage.getTitle().contains("Analyse LLM"));
                 assertTrue(stage.getScene().getStylesheets().getFirst().endsWith("ui/style.css"));
                 assertNotNull(button("start-analysis"));
             } finally {

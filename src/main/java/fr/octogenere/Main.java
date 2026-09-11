@@ -1,26 +1,24 @@
 package fr.octogenere;
 
 import fr.octogenere.llm.LlmException;
-import fr.octogenere.llm.openai.OpenAiProvider;
+import fr.octogenere.llm.LlmProvider;
+import fr.octogenere.llm.LlmProviderFactory;
 import io.github.cdimascio.dotenv.Dotenv;
 import io.github.cdimascio.dotenv.DotenvException;
 
-/** Point d'entrée de la première démonstration en console. */
+/** Point d'entrée console pour envoyer une demande au fournisseur configuré. */
 public class Main {
     public static void main(String[] args) {
         try {
             // Java ne lit pas les fichiers .env automatiquement.
             Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-            String apiKey = dotenv.get("OPENAI_API_KEY");
-            String model = dotenv.get("OPENAI_MODEL", "gpt-4.1-mini");
-
             String prompt = "Explique en une phrase à quoi sert une interface en Java.";
             if (args.length > 0) {
                 prompt = String.join(" ", args);
             }
 
-            // Le client réseau sera fermé à la sortie du bloc, même en cas d'erreur.
-            try (OpenAiProvider provider = new OpenAiProvider(apiKey, model)) {
+            // Le provider choisi par LLM_PROVIDER sera fermé même en cas d'erreur.
+            try (LlmProvider provider = LlmProviderFactory.from(dotenv)) {
                 String answer = provider.ask(prompt);
                 System.out.println(answer);
             }

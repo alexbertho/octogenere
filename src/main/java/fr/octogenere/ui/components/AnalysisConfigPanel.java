@@ -8,6 +8,8 @@ import javafx.scene.control.ProgressBar;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.VBox;
 import fr.octogenere.ui.controller.UIController;
+import fr.octogenere.analysis.config.CriterionCatalog;
+import fr.octogenere.analysis.config.EvaluationCriterion;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,27 +23,30 @@ public class AnalysisConfigPanel extends VBox {
     private Button startBtn;
 
     public AnalysisConfigPanel(UIController controller) {
-        this.controller = controller;
-        this.criteriaBoxes = new ArrayList<>();
-        setupUI();
+        this(controller, CriterionCatalog.loadDefault().criteria(),
+                "Les fichiers du projet seront préparés puis analysés par le LLM configuré.");
     }
 
-    private void setupUI() {
+    public AnalysisConfigPanel(UIController controller, List<EvaluationCriterion> criteria,
+                               String modeDescription) {
+        this.controller = controller;
+        this.criteriaBoxes = new ArrayList<>();
+        setupUI(criteria, modeDescription);
+    }
+
+    private void setupUI(List<EvaluationCriterion> criteria, String modeDescription) {
         this.setSpacing(15);
         this.setPadding(new Insets(20));
 
         Label title = new Label("Configuration de l'Analyse");
         title.getStyleClass().add("title");
-        Label demoNotice = new Label("Mode démonstration : résultats fictifs, sans appel API.");
-        demoNotice.setWrapText(true);
+        Label modeNotice = new Label(modeDescription);
+        modeNotice.setWrapText(true);
 
-        // Création des critères d'évaluation basés sur le sujet
         VBox criteriaContainer = new VBox(10);
-        addCriterion(criteriaContainer, "Qualité de l'Architecture (SOLID)", true);
-        addCriterion(criteriaContainer, "Lisibilité et Qualité du code", true);
-        addCriterion(criteriaContainer, "Gestion des exceptions", true);
-        addCriterion(criteriaContainer, "Qualité de la documentation", false);
-        addCriterion(criteriaContainer, "Sécurité", true);
+        for (EvaluationCriterion criterion : criteria) {
+            addCriterion(criteriaContainer, criterion.label(), criterion.enabled());
+        }
 
         // Bouton de lancement
         startBtn = new Button("LANCER L'ANALYSE");
@@ -59,7 +64,7 @@ public class AnalysisConfigPanel extends VBox {
         statusLabel = new Label("Statut : En attente...");
 
         this.getChildren().addAll(
-                title, demoNotice, criteriaContainer, new Separator(),
+                title, modeNotice, criteriaContainer, new Separator(),
                 startBtn, new Separator(),
                 progTitle, progressBar, statusLabel
         );

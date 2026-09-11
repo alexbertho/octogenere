@@ -69,7 +69,7 @@ class OpenAiProviderTest {
         assertEquals(question, request.get("input").asText());
         assertEquals("test-model", request.get("model").asText());
         assertFalse(request.get("store").asBoolean());
-        assertEquals(1024, request.get("max_output_tokens").asInt());
+        assertEquals(4096, request.get("max_output_tokens").asInt());
         assertEquals(1, requestCount.get());
     }
 

@@ -4,7 +4,9 @@ import fr.octogenere.analysis.AnalysisObserver;
 import fr.octogenere.analysis.EvaluationEngine;
 import fr.octogenere.analysis.model.CriterionResult;
 import fr.octogenere.analysis.model.EvaluationReport;
+import fr.octogenere.analysis.llm.InvalidLlmResponseException;
 import fr.octogenere.application.report.GenerateReportUseCase;
+import fr.octogenere.llm.LlmException;
 import fr.octogenere.project.ProjectExplorerService;
 import fr.octogenere.project.ProjectExplorerService.FileNode;
 import fr.octogenere.ui.components.AnalysisConfigPanel;
@@ -82,9 +84,9 @@ public class UIController implements AnalysisObserver, AutoCloseable {
             selectedProject = project;
             selectionBar.setProjectPath(project.toString());
             treePanel.loadProjectTree(root);
-            configPanel.updateProgress(0, "Projet prêt pour la démonstration.");
+            configPanel.updateProgress(0, "Projet prêt pour l'analyse.");
             logPanel.appendLog("[INFO] Projet sélectionné : " + project);
-        });
+        }, Operation.PROJECT);
     }
 
     public void onStartAnalysis(List<String> criteria) {
@@ -103,6 +105,7 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         List<String> selectedCriteria = List.copyOf(criteria);
         invalidateResults();
         configPanel.updateProgress(0, "Démarrage...");
+        logPanel.appendLog("[INFO] Lancement de l'analyse.");
 
         Task<EvaluationReport> task = new Task<>() {
             @Override
@@ -114,12 +117,12 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         };
         startTask(task, report -> {
             lastReport = report;
-            logPanel.appendLog(report.overallSummary());
+            logPanel.appendLog("[SYNTHÈSE] " + report.overallSummary());
             for (CriterionResult result : report.criterionResults()) {
                 logPanel.appendLog(result.criterion() + " : " + result.score() + " / " + result.maxScore());
             }
             configPanel.updateProgress(1, "Résultats disponibles.");
-        });
+        }, Operation.ANALYSIS);
     }
 
     public void onGenerateReport() {
@@ -144,7 +147,7 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         startTask(task, file -> {
             logPanel.appendLog("[SUCCÈS] Rapport LaTeX : " + file.toAbsolutePath());
             configPanel.updateProgress(1, "Rapport LaTeX généré.");
-        });
+        }, Operation.REPORT);
     }
 
     public void onConfigurationChanged() {
@@ -159,7 +162,7 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         logPanel.setReportButtonEnabled(false);
     }
 
-    private <T> void startTask(Task<T> task, Consumer<T> onSuccess) {
+    private <T> void startTask(Task<T> task, Consumer<T> onSuccess, Operation operation) {
         currentTask = task;
         setBusy(true);
         // Ces callbacks sont exécutés par JavaFX sur le thread de la fenêtre.
@@ -175,11 +178,23 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         task.setOnFailed(event -> {
             if (!closed) {
                 Throwable error = task.getException();
-                logPanel.appendLog("[ERREUR] " + error.getMessage());
+                String message = error == null || error.getMessage() == null || error.getMessage().isBlank()
+                        ? "Une erreur inattendue est survenue."
+                        : error.getMessage();
+                boolean llmFailure = operation == Operation.ANALYSIS
+                        && (error instanceof LlmException || error instanceof InvalidLlmResponseException);
+                String prefix = llmFailure ? "[ERREUR IA] "
+                        : operation == Operation.REPORT ? "[ERREUR RAPPORT] " : "[ERREUR] ";
+                logPanel.appendLog(prefix + message);
                 if (selectedProject == null) {
                     selectionBar.setProjectPath("Aucun projet sélectionné");
                 }
-                configPanel.updateProgress(0, "Échec de l'opération.");
+                String failureStatus = switch (operation) {
+                    case PROJECT -> "Échec de la lecture du projet.";
+                    case ANALYSIS -> "Échec de l'analyse. Corrige la configuration puis réessaie.";
+                    case REPORT -> "Échec de la génération du rapport.";
+                };
+                configPanel.updateProgress(0, failureStatus);
                 setBusy(false);
             }
         });
@@ -190,6 +205,12 @@ public class UIController implements AnalysisObserver, AutoCloseable {
             }
         });
         worker.submit(task);
+    }
+
+    private enum Operation {
+        PROJECT,
+        ANALYSIS,
+        REPORT
     }
 
     private void setBusy(boolean value) {
@@ -224,5 +245,6 @@ public class UIController implements AnalysisObserver, AutoCloseable {
             currentTask.cancel(true);
         }
         worker.shutdownNow();
+        evaluationEngine.close();
     }
 }
