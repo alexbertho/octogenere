@@ -40,6 +40,13 @@ public class GenerateReportUseCase {
                 results,
                 request.overallSummary());
 
-        return reportGenerator.generate(report, request.outputDirectory());
+        return execute(report, request.outputDirectory());
+    }
+
+    /** Réutilise les résultats déjà validés, notamment ceux affichés dans l'interface. */
+    public Path execute(EvaluationReport report, Path outputDirectory) {
+        Objects.requireNonNull(report, "Le rapport doit être présent.");
+        Objects.requireNonNull(outputDirectory, "Le dossier de sortie doit être présent.");
+        return reportGenerator.generate(report, outputDirectory);
     }
 }

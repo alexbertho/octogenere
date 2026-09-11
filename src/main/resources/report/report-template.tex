@@ -1,12 +1,24 @@
-% Document généré automatiquement par OctoGenere.
-% La structure est contrôlée par l'application ; les données variables sont échappées en Java.
+% Document généré par OctoGenere à partir de résultats Java validés.
 \documentclass[11pt,a4paper]{article}
 
-\usepackage[T1]{fontenc}
+% Les mêmes familles sont disponibles avec pdfLaTeX et avec un moteur Unicode.
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage{tgpagella}
+  \usepackage{tgheros}
+\else
+  \usepackage{fontspec}
+  \setmainfont{texgyrepagella}[
+    Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+    ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+  \setsansfont{texgyreheros}[
+    Extension=.otf, UprightFont=*-regular, BoldFont=*-bold,
+    ItalicFont=*-italic, BoldItalicFont=*-bolditalic]
+\fi
 \usepackage[french]{babel}
-\usepackage{lmodern}
 \usepackage{microtype}
-\usepackage[a4paper,margin=2.3cm,headheight=15pt]{geometry}
+\usepackage[a4paper,left=25mm,right=25mm,top=24mm,bottom=23mm,headheight=24pt,headsep=7mm,footskip=12mm]{geometry}
 \usepackage{graphicx}
 \usepackage[table]{xcolor}
 \usepackage{array}
@@ -15,45 +27,79 @@
 \usepackage{enumitem}
 \usepackage{fancyhdr}
 \usepackage{titlesec}
+\usepackage{tocloft}
 \usepackage{lastpage}
 \usepackage[hidelinks]{hyperref}
 
-\definecolor{UcaBlue}{HTML}{008DAD}
-\definecolor{UcaNavy}{HTML}{1D2A35}
-\definecolor{UcaLight}{HTML}{EAF6F9}
-\definecolor{UcaMuted}{HTML}{5D6973}
-\definecolor{UcaLine}{HTML}{C8DDE3}
+\definecolor{Ink}{HTML}{23313B}
+\definecolor{Accent}{HTML}{0086A5}
+\definecolor{Muted}{HTML}{64737B}
+\definecolor{Rule}{HTML}{D4DFE3}
+\definecolor{Tint}{HTML}{F1F6F7}
 
+\color{Ink}
 \setlength{\parindent}{0pt}
-\setlength{\parskip}{0.55em}
-\setlist[itemize]{leftmargin=1.5em,itemsep=0.25em,topsep=0.25em}
-\renewcommand{\arraystretch}{1.25}
+\setlength{\parskip}{6pt}
+\setlength{\emergencystretch}{2em}
+\linespread{1.08}
+\setlist[itemize]{
+  label=\textcolor{Accent}{\small\textbullet},
+  leftmargin=1.25em,
+  itemsep=3pt,
+  topsep=3pt,
+  parsep=0pt
+}
+\setcounter{tocdepth}{1}
+\setlength{\cftbeforesecskip}{13pt}
+\setlength{\cftsecnumwidth}{2em}
+\renewcommand{\cftsecfont}{\sffamily\color{Ink}}
+\renewcommand{\cftsecpagefont}{\sffamily\color{Accent}}
+\renewcommand{\cftsecleader}{\color{Rule}\cftdotfill{\cftdotsep}}
+\renewcommand{\cfttoctitlefont}{\fontsize{30}{36}\selectfont\color{Ink}}
+\setlength{\cftaftertoctitleskip}{18pt}
+\tocloftpagestyle{fancy}
 
 \titleformat{\section}
-  {\Large\bfseries\sffamily\color{UcaNavy}}
-  {\color{UcaBlue}\thesection}{0.75em}{}
-  [\vspace{0.15em}{\color{UcaLine}\titlerule}]
+  {\Large\bfseries\color{Ink}}
+  {\color{Accent}\thesection}
+  {0.8em}{}
+\titlespacing*{\section}{0pt}{22pt}{12pt}
 \titleformat{\subsection}
-  {\large\bfseries\sffamily\color{UcaNavy}}
+  {\sffamily\normalsize\bfseries\color{Ink}}
   {\thesubsection}{0.6em}{}
+\titlespacing*{\subsection}{0pt}{16pt}{5pt}
 
 \pagestyle{fancy}
 \fancyhf{}
-\fancyhead[L]{\sffamily\small OctoGenere}
-\fancyhead[R]{\sffamily\small @@PROJECT_NAME@@}
-\fancyfoot[L]{\sffamily\footnotesize Rapport d'évaluation logicielle}
-\fancyfoot[R]{\sffamily\footnotesize Page \thepage\ sur \pageref{LastPage}}
+\fancyhead[L]{\sffamily\small\bfseries\color{Ink}OctoGenere}
+\fancyhead[R]{\sffamily\scriptsize\color{Muted}RAPPORT D'ÉVALUATION LOGICIELLE}
+\fancyfoot[L]{\sffamily\scriptsize\color{Muted}Université Côte d'Azur}
+\fancyfoot[R]{\sffamily\small\color{Ink}\thepage\enspace/\enspace\pageref{LastPage}}
 \renewcommand{\headrulewidth}{0.4pt}
+\renewcommand{\headrule}{\hbox to\headwidth{\color{Rule}\leaders\hrule height \headrulewidth\hfill}}
 \renewcommand{\footrulewidth}{0pt}
 
+% Le libellé et sa valeur restent alignés sur la même marge.
+\newcommand{\metafield}[2]{%
+  {\sffamily\fontsize{8.5}{11}\selectfont\bfseries\color{Muted}\strut #1\par}
+  \vspace{3pt}
+  {\sffamily\fontsize{10.5}{14}\selectfont\color{Ink}\raggedright #2\par}
+}
+
 \newcommand{\scorebox}[2]{%
-  \begin{center}
-  \fcolorbox{UcaBlue}{UcaLight}{%
-    \parbox{0.9\textwidth}{%
-      \sffamily\textbf{#1}\hfill{\Large\bfseries\color{UcaBlue}#2}%
+  \begingroup
+  \setlength{\fboxsep}{12pt}%
+  \noindent\colorbox{Tint}{%
+    \makebox[\dimexpr\linewidth-2\fboxsep\relax][s]{%
+      % Centrer chaque texte sur le même axe, même si leurs tailles diffèrent.
+      \raisebox{\dimexpr-\height/2+\depth/2\relax}{%
+        \sffamily\small\bfseries\color{Muted}#1}%
+      \hfill
+      \raisebox{\dimexpr-\height/2+\depth/2\relax}{%
+        \sffamily\fontsize{19}{23}\selectfont\bfseries\color{Accent}#2}%
     }%
-  }
-  \end{center}
+  }\par
+  \endgroup
 }
 
 \begin{document}
@@ -61,66 +107,92 @@
 \hypersetup{pageanchor=false}
 \begin{titlepage}
   \thispagestyle{empty}
+  \setlength{\parskip}{0pt}
 
-  \begin{flushright}
-    \IfFileExists{uca-logo.png}{%
-      \includegraphics[width=0.43\textwidth]{uca-logo.png}%
-    }{}
-  \end{flushright}
+  \noindent
+  \begin{minipage}[c]{0.56\textwidth}
+    % Le PNG contient une marge blanche de 9 mm : seule cette marge est retirée à l'affichage.
+    \includegraphics[width=53mm,trim=9mm 9mm 9mm 9mm,clip]{uca-logo.png}
+  \end{minipage}\hfill
+  \begin{minipage}[c]{0.38\textwidth}
+    \raggedleft
+    {\sffamily\large\bfseries OctoGenere\par}
+    \vspace{4pt}
+    {\sffamily\small\color{Muted}Analyse de projets logiciels\par}
+  \end{minipage}
 
-  \vspace{2.2cm}
-  {\color{UcaBlue}\rule{\textwidth}{1.3pt}}
-  \vspace{0.6cm}
+  \vspace{12mm}
+  {\color{Rule}\hrule height 0.5pt}
 
-  {\sffamily\Huge\bfseries\color{UcaNavy} Rapport d'évaluation\\[0.2em] logicielle}
+  \vspace{21mm}
+  {\sffamily\fontsize{9}{12}\selectfont\bfseries\color{Accent}
+    ÉVALUATION LOGICIELLE\par}
 
-  \vspace{0.4cm}
-  {\sffamily\Large\color{UcaBlue} Généré par OctoGenere}
+  \vspace{7mm}
+  {\fontsize{40}{44}\selectfont\color{Ink}
+    Rapport\\d'évaluation\par}
 
-  \vspace{1.4cm}
-  {\sffamily\LARGE\bfseries @@PROJECT_NAME@@}
+  \vspace{8mm}
+  {\sffamily\fontsize{11}{16}\selectfont\color{Muted}
+    Qualité du code, conception et recommandations\par}
+
+  \vspace{14mm}
+  {\color{Accent}\hrule height 1.3pt}
+  \vspace{7mm}
+  {\sffamily\fontsize{8.5}{11}\selectfont\bfseries\color{Muted}PROJET ÉVALUÉ\par}
+  \vspace{4mm}
+  {\fontsize{22}{27}\selectfont\bfseries\raggedright @@PROJECT_NAME@@\par}
+
+  \vspace{10mm}
+  \noindent
+  \begin{minipage}[t]{0.47\textwidth}
+    \vspace{0pt}
+    \metafield{DATE DE L'ANALYSE}{@@ANALYSIS_DATE@@}
+  \end{minipage}\hfill
+  \begin{minipage}[t]{0.47\textwidth}
+    \vspace{0pt}
+    \metafield{MODÈLE UTILISÉ}{@@MODEL_NAME@@}
+  \end{minipage}
+
+  \vspace{9mm}
+  \metafield{CONFIGURATION}{@@CONFIGURATION@@}
 
   \vfill
-
-  \renewcommand{\arraystretch}{1.5}
-  \begin{tabularx}{\textwidth}{@{}>{\sffamily\bfseries\color{UcaMuted}}p{3.8cm}X@{}}
-    Date de l'analyse & @@ANALYSIS_DATE@@ \\
-    Modèle utilisé & @@MODEL_NAME@@ \\
-    Configuration & @@CONFIGURATION@@ \\
-  \end{tabularx}
-
-  \vspace{0.7cm}
-  {\color{UcaBlue}\rule{\textwidth}{1.3pt}}
+  {\color{Rule}\hrule height 0.5pt}
+  \vspace{4mm}
+  {\sffamily\fontsize{8}{11}\selectfont\color{Muted}
+    Document généré par OctoGenere\hfill Rapport d'évaluation de projet\par}
 \end{titlepage}
 \hypersetup{pageanchor=true}
 
+\renewcommand{\contentsname}{Sommaire}
 \tableofcontents
-\newpage
+\clearpage
 
 \section{Synthèse générale}
 
-\begin{center}
-\fcolorbox{UcaLine}{UcaLight}{%
-  \parbox{0.9\textwidth}{@@OVERALL_SUMMARY@@}%
-}
-\end{center}
+@@OVERALL_SUMMARY@@
 
 \section{Vue d'ensemble des résultats}
 
-\rowcolors{2}{UcaLight}{white}
-\begin{tabularx}{\textwidth}{@{}>{\bfseries}X>{\centering\arraybackslash}p{1.7cm}>{\centering\arraybackslash}p{2cm}>{\centering\arraybackslash}p{1.8cm}@{}}
+\begingroup
+\setlength{\parskip}{0pt}
+\setlength{\tabcolsep}{8pt}
+\renewcommand{\arraystretch}{1.4}
+\arrayrulecolor{Rule}
+\begin{tabularx}{\textwidth}{>{\raggedright\arraybackslash}X>{\centering\arraybackslash}p{14mm}>{\centering\arraybackslash}p{20mm}>{\centering\arraybackslash}p{18mm}}
   \toprule
-  \rowcolor{UcaBlue}
-  \color{white}\textbf{Critère} &
-  \color{white}\textbf{Score} &
-  \color{white}\textbf{Maximum} &
-  \color{white}\textbf{Réussite} \\
+  \multicolumn{1}{l}{\sffamily\small\bfseries\color{Accent}Critère} &
+  \multicolumn{1}{c}{\sffamily\small\bfseries\color{Accent}Score} &
+  \multicolumn{1}{c}{\sffamily\small\bfseries\color{Accent}Maximum} &
+  \multicolumn{1}{c}{\sffamily\small\bfseries\color{Accent}Réussite} \\
   \midrule
   @@SUMMARY_ROWS@@
   \bottomrule
 \end{tabularx}
+\endgroup
 
-\newpage
+\clearpage
 @@CRITERION_SECTIONS@@
 
 \end{document}
