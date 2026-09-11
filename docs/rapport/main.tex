@@ -226,11 +226,11 @@ Ensuite les critères d'évaluation du projet devait être modulables, plusieurs
 Finalement, la réflexion autour des Design Patterns porte dans la partie IA ci-dessous.
 
 \section{Partie UI}
-J'ai choisi d'utiliser JavaFX car c'est un framework simple à mettre en place car natif de java et simple à prendre en main. Cela m'a permis d'utiliser du CSS afin de personnaliser l'interface et de la rendre plus attractive. JavaFx possède des fonctionnalités simple et largement suffisantes à notre projet. J'ai également utilisé UIverse.io pour le look des checkboxes.
+Nous avons choisi d'utiliser JavaFX car c'est un framework simple à mettre en place, natif de Java et facile à prendre en main. Cela nous a permis d'utiliser du CSS afin de personnaliser l'interface et de la rendre plus attractive. JavaFX possède des fonctionnalités simples et largement suffisantes pour notre projet. Nous avons également utilisé UIverse.io pour le look des checkboxes.
 
-J'ai séparé le code visuel de la logique métier avec un MVC, l'interface ne fait donc aucun calcul et délègue les actions au contrôleur UIController. J'ai choisi cette architecture afin de permettre aux autres membres du groupe d'intégrer plus facilement le moteur d'ia et le générateur LaTeX.
+Nous avons séparé le code visuel de la logique métier avec un MVC. L'interface ne fait donc aucun calcul et délègue les actions au contrôleur UIController. Nous avons choisi cette architecture afin de faciliter l'intégration du moteur d'IA et du générateur LaTeX.
 
-Egalement j'ai choisi d'utiliser le design pattern Observer afin que la barre de progression et la zone de texte contenant les logs et les erreurs puissent recevoir des mises à jour régulières de la part du contrôler.
+Nous avons également choisi d'utiliser le design pattern Observer afin que la barre de progression et la zone de texte contenant les logs et les erreurs puissent recevoir des mises à jour régulières de la part du contrôleur.
 
 \section{Partie IA}
 \subsection{Composition du prompt d’entrée}
