@@ -1,11 +1,13 @@
 package fr.octogenere;
 
+import io.github.cdimascio.dotenv.Dotenv;
+import io.github.cdimascio.dotenv.DotenvException;
+
 import fr.octogenere.llm.LlmException;
 import fr.octogenere.llm.LlmProvider;
 import fr.octogenere.llm.google.GeminiProvider;
 
 
-import fr.octogenere.llm.openai.OpenAiProvider;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -14,27 +16,27 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
 import fr.octogenere.prompt.PromptBuilder;
-import io.github.cdimascio.dotenv.Dotenv;
-import io.github.cdimascio.dotenv.DotenvException;
 
 /** Point d'entrée de la première démonstration en console. */
 public class Main {
     public static void main(String[] args) {
-        /*
+
         String folderPath = ".";
         if (args.length > 0) {
             folderPath = String.join(" ", args);
         }
 
         String apiKey = null;
+        String model = null;
         String configFile = null;
         try {
             // Java ne lit pas les fichiers .env automatiquement.
             Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-            apiKey = dotenv.get("OPENAI_API_KEY");
-            configFile = dotenv.get("CRITERIA_CFG");
+            apiKey = dotenv.get("GOOGLE_API_KEY");
+            model = dotenv.get("GOOGLE_MODEL");
+            configFile = dotenv.get("CRITERIA_FILE");
         }  catch (DotenvException error) {
-            System.err.println("Impossible de lire le fichier .env. Vérifie sa syntaxe.");
+            System.err.println("Impossible to read .env file (it is very important)");
             System.exit(1);
         }
 
@@ -47,41 +49,19 @@ public class Main {
             System.err.println(configFile + " cant be read");
         }
 
+        String prompt = null;
         try {
-            String prompt = PromptBuilder.BuildReviewPrompt(folderPath, criteria);
+            prompt = PromptBuilder.BuildReviewPrompt(folderPath, criteria);
             System.out.println("Prompt generated : \n" + prompt);
         } catch (Exception e) {
             System.err.println("Fatal error. Unable to generate review prompt : " + e.getMessage());
             e.printStackTrace();
         }
-        */
-        /*
-        try {
-            String apiKey = dotenv.get("OPENAI_API_KEY");
-            String model = dotenv.get("OPENAI_MODEL", "gpt-4.1-mini");
-
-            String prompt = "Explique en une phrase à quoi sert une interface en Java.";
-            if (args.length > 0) {
-                prompt = String.join(" ", args);
-            }
-
-            // Le client réseau sera fermé à la sortie du bloc, même en cas d'erreur.
-            try (OpenAiProvider provider = new OpenAiProvider(apiKey, model)) {
-                String answer = provider.ask(prompt);
-                System.out.println(answer);
-            }
-        } catch (LlmException error) {
-            System.err.println("Erreur : " + error.getMessage());
-            System.exit(1);
-        }
-        */
-
-        String testPrompt = "Projet Java ";
 
         try {
-            LlmProvider provider = new GeminiProvider();
+            LlmProvider provider = new GeminiProvider(apiKey, model);
 
-            String json = provider.ask(testPrompt);
+            String json = provider.ask(prompt);
 
             System.out.println("Réponse test :" + json);
 

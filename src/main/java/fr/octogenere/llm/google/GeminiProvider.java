@@ -5,11 +5,12 @@ import fr.octogenere.llm.LlmException;
 import com.google.genai.Client;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
-import io.github.cdimascio.dotenv.Dotenv;
 
 public class GeminiProvider implements LlmProvider {
+    private String apiKey;
+    private String model;
+
     private final Client client;
-    private final String model;
 
     private static final String SCHEMA = """
             Réponse demandée sous un format précis JSON à respecter absolument (pas de bonus ou de texte explicatif) :
@@ -34,19 +35,15 @@ public class GeminiProvider implements LlmProvider {
             }
             """;
 
-    public GeminiProvider() {
-        
-        //Récupérer le fichier environnement configuré à la racine avec la clé API et le model
-        Dotenv dotenv = Dotenv.configure().ignoreIfMissing().load();
-
-        String apiKey = dotenv.get("GOOGLE_API_KEY");
-        this.model = dotenv.get("GOOGLE_MODEL");
+    public GeminiProvider(String apiKey, String model) {
+        this.apiKey = apiKey;
+        this.model = model;
 
         if (apiKey == null || apiKey.isEmpty()) {
-            throw new LlmException("Fichier .env manquant ou variable GOOGLE_API_KEY null");
+            throw new LlmException("Problème au niveau de la variable environnement GOOGLE_API_KEY (manquant ou null)");
         }
         if (model == null || model.isEmpty()) {
-            throw new LlmException("Fichier .env manquant ou variable GOOGLE_MODEL null");
+            throw new LlmException("Problème au niveau de la variable environnement GOOGLE_MODEL (manquant ou null)");
         }
 
         this.client = Client.builder().apiKey(apiKey).build();
