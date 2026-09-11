@@ -44,12 +44,20 @@ public class OpenAiProvider implements LlmProvider, AutoCloseable {
 
     @Override
     public String ask(String prompt) {
+        return ask(prompt, model);
+    }
+
+    @Override
+    public String ask(String prompt, String selectedModel) {
         if (prompt == null || prompt.isBlank()) {
             throw new LlmException("La question ne doit pas être vide.");
         }
+        if (selectedModel == null || selectedModel.isBlank()) {
+            throw new LlmException("Le modèle OpenAI doit être renseigné.");
+        }
 
         ResponseCreateParams request = ResponseCreateParams.builder()
-                .model(model)
+                .model(selectedModel.trim())
                 .input(prompt)
                 .maxOutputTokens(4096)
                 .store(false)

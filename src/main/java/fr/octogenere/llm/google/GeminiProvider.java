@@ -6,9 +6,14 @@ import com.google.genai.errors.GenAiIOException;
 import com.google.genai.types.GenerateContentConfig;
 import com.google.genai.types.GenerateContentResponse;
 import com.google.genai.types.HttpOptions;
+import com.google.genai.types.ListModelsConfig;
+import com.google.genai.types.Model;
 import fr.octogenere.llm.LlmException;
 import fr.octogenere.llm.LlmProvider;
 
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
 import java.util.Objects;
 
 /** Adapte le SDK Google Gen AI au contrat commun LlmProvider. */
@@ -17,6 +22,7 @@ public final class GeminiProvider implements LlmProvider {
 
     private final String model;
     private final ContentGenerator generator;
+    private final ModelLister modelLister;
     private final Runnable closeAction;
 
     public GeminiProvider(String apiKey, String model) {
@@ -40,21 +46,34 @@ public final class GeminiProvider implements LlmProvider {
             response.checkFinishReason();
             return response.text();
         };
+        this.modelLister = () -> client.models.list(
+                ListModelsConfig.builder().pageSize(1000).build());
         this.closeAction = client::close;
     }
 
     GeminiProvider(ContentGenerator generator, String model) {
+        this(generator, List::of, model);
+    }
+
+    GeminiProvider(ContentGenerator generator, ModelLister modelLister, String model) {
         this.model = requireModel(model);
         this.generator = Objects.requireNonNull(generator);
+        this.modelLister = Objects.requireNonNull(modelLister);
         this.closeAction = () -> { };
     }
 
     @Override
     public String ask(String prompt) {
+        return ask(prompt, model);
+    }
+
+    @Override
+    public String ask(String prompt, String selectedModel) {
         if (prompt == null || prompt.isBlank()) {
             throw new LlmException("La demande envoyée à Gemini ne doit pas être vide.");
         }
         System.out.println("Sending prompt :" + prompt);
+        String requestedModel = requireModel(selectedModel);
         GenerateContentConfig config = GenerateContentConfig.builder()
                 .responseMimeType("application/json")
                 .temperature(0.2f)
@@ -63,7 +82,7 @@ public final class GeminiProvider implements LlmProvider {
 
         String output;
         try {
-            output = generator.generate(model, prompt, config);
+            output = generator.generate(requestedModel, prompt, config);
         } catch (ApiException error) {
             throw translateApiError(error);
         } catch (GenAiIOException error) {
@@ -76,6 +95,38 @@ public final class GeminiProvider implements LlmProvider {
         }
         System.out.println("Received output :" + output);
         return output.trim();
+    }
+
+    @Override
+    public List<String> availableModels() {
+        try {
+            List<String> models = new ArrayList<>();
+            for (Model availableModel : modelLister.list()) {
+                boolean supportsGeneration = availableModel.supportedActions()
+                        .orElse(List.of())
+                        .contains("generateContent");
+                availableModel.name()
+                        .filter(name -> supportsGeneration)
+                        .map(GeminiProvider::normalizeModelName)
+                        .filter(name -> !name.isBlank())
+                        .ifPresent(models::add);
+            }
+            return models.stream()
+                    .distinct()
+                    .sorted(Comparator.naturalOrder())
+                    .toList();
+        } catch (ApiException error) {
+            throw translateApiError(error);
+        } catch (GenAiIOException error) {
+            throw new LlmException("Impossible de charger la liste des modèles Gemini.", error);
+        } catch (RuntimeException error) {
+            throw new LlmException("Gemini n'a pas pu fournir la liste des modèles.", error);
+        }
+    }
+
+    private static String normalizeModelName(String name) {
+        String normalized = name.trim();
+        return normalized.startsWith("models/") ? normalized.substring("models/".length()) : normalized;
     }
 
     private LlmException translateApiError(ApiException error) {
@@ -120,5 +171,10 @@ public final class GeminiProvider implements LlmProvider {
     @FunctionalInterface
     interface ContentGenerator {
         String generate(String model, String prompt, GenerateContentConfig config);
+    }
+
+    @FunctionalInterface
+    interface ModelLister {
+        Iterable<Model> list();
     }
 }

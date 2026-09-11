@@ -39,6 +39,11 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         thread.setDaemon(true);
         return thread;
     });
+    private final ExecutorService modelWorker = Executors.newSingleThreadExecutor(task -> {
+        Thread thread = new Thread(task, "octogenere-model-loader");
+        thread.setDaemon(true);
+        return thread;
+    });
 
     // Vues
     private ProjectSelectionBar selectionBar;
@@ -50,6 +55,7 @@ public class UIController implements AnalysisObserver, AutoCloseable {
     private Path selectedProject;
     private EvaluationReport lastReport;
     private Task<?> currentTask;
+    private Task<?> modelTask;
     private boolean busy;
     private boolean closed;
 
@@ -70,6 +76,43 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         this.treePanel = treePanel;
         this.configPanel = configPanel;
         this.logPanel = logPanel;
+        configPanel.setAvailableModels(List.of(), evaluationEngine.configuredModel());
+        loadAvailableModels();
+    }
+
+    /** Charge les modèles du fournisseur sans bloquer le thread JavaFX. */
+    private void loadAvailableModels() {
+        String configuredModel = evaluationEngine.configuredModel();
+        Task<List<String>> task = new Task<>() {
+            @Override
+            protected List<String> call() {
+                List<String> models = evaluationEngine.availableModels();
+                return models == null ? List.of() : List.copyOf(models);
+            }
+        };
+        modelTask = task;
+        task.setOnSucceeded(event -> {
+            if (closed) {
+                return;
+            }
+            List<String> models = task.getValue();
+            configPanel.setAvailableModels(models, configuredModel);
+            if (models.isEmpty()) {
+                logPanel.appendLog("[ATTENTION] Aucun modèle distant reçu ; utilisation du modèle configuré : "
+                        + configuredModel + ".");
+            } else {
+                logPanel.appendLog("[CONFIGURATION] " + models.size()
+                        + " modèle(s) disponible(s) chargé(s).");
+            }
+        });
+        task.setOnFailed(event -> {
+            if (!closed) {
+                configPanel.setAvailableModels(List.of(), configuredModel);
+                logPanel.appendLog("[ATTENTION] Impossible de charger les modèles distants ; utilisation du modèle "
+                        + "configuré : " + configuredModel + ".");
+            }
+        });
+        modelWorker.submit(task);
     }
 
     /**
@@ -110,6 +153,15 @@ public class UIController implements AnalysisObserver, AutoCloseable {
      * @param criteria La liste des critères d'évaluation sélectionnés.
      */
     public void onStartAnalysis(List<String> criteria) {
+        onStartAnalysis(criteria, evaluationEngine.configuredModel());
+    }
+
+    /**
+     * Déclenchée pour lancer l'analyse avec le modèle choisi dans l'interface.
+     * @param criteria La liste des critères d'évaluation sélectionnés.
+     * @param model Le modèle sélectionné.
+     */
+    public void onStartAnalysis(List<String> criteria, String model) {
         if (busy || closed) {
             return;
         }
@@ -121,8 +173,13 @@ public class UIController implements AnalysisObserver, AutoCloseable {
             logPanel.appendLog("[ERREUR] Sélectionne au moins un critère.");
             return;
         }
+        if (model == null || model.isBlank()) {
+            logPanel.appendLog("[ERREUR] Sélectionne un modèle d'IA.");
+            return;
+        }
         Path project = selectedProject;
         List<String> selectedCriteria = List.copyOf(criteria);
+        String selectedModel = model.trim();
         invalidateResults();
         configPanel.updateProgress(0, "Démarrage...");
         logPanel.appendLog("[INFO] Lancement de l'analyse.");
@@ -132,7 +189,7 @@ public class UIController implements AnalysisObserver, AutoCloseable {
             @Override
             protected EvaluationReport call() throws Exception {
                 return Objects.requireNonNull(
-                        evaluationEngine.analyze(project, selectedCriteria, UIController.this),
+                        evaluationEngine.analyze(project, selectedCriteria, selectedModel, UIController.this),
                         "Le moteur n'a fourni aucun résultat.");
             }
         };
@@ -277,7 +334,11 @@ public class UIController implements AnalysisObserver, AutoCloseable {
         if (currentTask != null) {
             currentTask.cancel(true);
         }
+        if (modelTask != null) {
+            modelTask.cancel(true);
+        }
         worker.shutdownNow();
+        modelWorker.shutdownNow();
         evaluationEngine.close();
     }
 }

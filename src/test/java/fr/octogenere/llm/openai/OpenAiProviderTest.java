@@ -62,12 +62,12 @@ class OpenAiProviderTest {
 
         LlmProvider llm = provider;
         String question = "Explique une interface \"Java\".\nEn français.";
-        assertEquals("Première partie.\nDeuxième partie.", llm.ask(question));
+        assertEquals("Première partie.\nDeuxième partie.", llm.ask(question, "selected-model"));
 
         JsonNode request = new ObjectMapper().readTree(receivedBody);
         assertEquals("POST", receivedMethod);
         assertEquals(question, request.get("input").asText());
-        assertEquals("test-model", request.get("model").asText());
+        assertEquals("selected-model", request.get("model").asText());
         assertFalse(request.get("store").asBoolean());
         assertEquals(4096, request.get("max_output_tokens").asInt());
         assertEquals(1, requestCount.get());
