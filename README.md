@@ -48,16 +48,10 @@ Le programme lit le fichier `.env` au démarrage. Les variables d'environnement 
 
 Avec Gemini, le sélecteur interroge `models.list` en arrière-plan et propose uniquement les modèles compatibles avec `generateContent`. Si cette liste est vide ou inaccessible, `GOOGLE_MODEL` reste le modèle sélectionné.
 
-Le programme console utilise lui aussi le fournisseur choisi par `LLM_PROVIDER`. Compiler et lancer sa question de démonstration :
+Le même point d'entrée peut aussi être lancé avec le plugin Maven Exec :
 
 ```bash
 mvn compile exec:java
-```
-
-Envoyer sa propre question :
-
-```bash
-mvn compile exec:java -Dexec.args="Explique le rôle d'une interface Java."
 ```
 
 Lancer les tests avec un serveur simulé local, sans clé API réelle ni appel à OpenAI :
