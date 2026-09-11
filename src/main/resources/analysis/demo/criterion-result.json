@@ -1,0 +1,10 @@
+{
+  "criterion": "Critère de démonstration",
+  "score": 7,
+  "maxScore": 10,
+  "summary": "Résultat fictif pour vérifier le parcours de l'interface jusqu'au rapport.",
+  "strengths": ["Exemple de point fort, à remplacer par les résultats du vrai moteur."],
+  "weaknesses": ["Le code du projet n'a pas été évalué dans cette démonstration."],
+  "issues": [],
+  "recommendations": ["Brancher un moteur d'analyse réel avant d'interpréter les scores."]
+}

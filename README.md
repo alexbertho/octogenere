@@ -8,9 +8,9 @@ Le sujet complet est disponible dans [sujet2627-m1-en.pdf](docs/sujet2627-m1-en.
 
 ## État actuel
 
-Un premier programme en console permet d'envoyer une question à OpenAI et d'afficher sa réponse.
+L'interface JavaFX permet de sélectionner un dossier, de lancer une analyse de démonstration sans appel API et de générer un rapport LaTeX. Le programme console OpenAI reste disponible.
 
-Le projet utilise Java 21 et Maven. La version de JavaFX reste à choisir pour l'intégration de l'interface graphique.
+Le projet utilise Java 21, JavaFX 21.0.11 et Maven.
 
 ## Prérequis
 
@@ -19,6 +19,16 @@ Le projet utilise Java 21 et Maven. La version de JavaFX reste à choisir pour l
 - Une clé API OpenAI disposant de l'accès au modèle choisi pour les appels réels.
 
 ## Configuration et lancement
+
+Lancer l'interface graphique depuis la racine du projet :
+
+```bash
+mvn javafx:run
+```
+
+Ce mode fonctionne sans `.env` ni clé API. Les scores sont fictifs et identifiés comme une démonstration dans l'interface et le rapport. Sélectionner un dossier, choisir les critères, lancer l'analyse, puis cliquer sur « GÉNÉRER LE RAPPORT LATEX ». Chaque export crée un dossier distinct dans `target/reports/`, contenant `rapport-evaluation.tex` et le logo. La compilation PDF reste une étape séparée.
+
+Pour le programme console OpenAI :
 
 Depuis la racine du projet, copier `.env.example` en `.env` si ce fichier n'existe pas encore. Renseigner sa clé dans `OPENAI_API_KEY` et choisir le modèle avec `OPENAI_MODEL` :
 
@@ -45,6 +55,12 @@ Lancer les tests avec un serveur simulé local, sans clé API réelle ni appel �
 
 ```bash
 mvn test
+```
+
+Les tests graphiques s'activent séparément et nécessitent une session graphique (ils ouvrent temporairement des fenêtres) :
+
+```bash
+mvn -Doctogenere.ui.tests=true -Dtest=UiWorkflowTest test
 ```
 
 ## Security module: sandboxed execution & prompt-injection defense
